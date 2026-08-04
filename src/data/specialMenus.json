@@ -1,0 +1,15 @@
+[
+  {"name":"野人","cards":["ランニング","ダッシュ","エアロビクス"],"kick":0,"speed":20,"stamina":20,"technique":0,"physical":0,"jump":0,"mental":-2,"total":38,"fatigue":145},
+  {"name":"肉体改造","cards":["ウェイト","ダッシュ","ストレッチ"],"kick":5,"speed":10,"stamina":0,"technique":0,"physical":8,"jump":10,"mental":0,"total":33,"fatigue":150},
+  {"name":"執念のクリア","cards":["ヘディング","ストレッチ","合気道"],"kick":0,"speed":6,"stamina":0,"technique":2,"physical":4,"jump":10,"mental":10,"total":32,"fatigue":110},
+  {"name":"マルセイユルーレット","cards":["ストレッチ","アジリティ","カルチョビット"],"kick":0,"speed":12,"stamina":4,"technique":4,"physical":8,"jump":0,"mental":4,"total":32,"fatigue":110},
+  {"name":"エースキラー","cards":["マンツーマン","スライディング","ダッシュ"],"kick":0,"speed":12,"stamina":6,"technique":2,"physical":10,"jump":0,"mental":0,"total":30,"fatigue":120},
+  {"name":"タフネスダイナモ","cards":["プレス","ランニング","アジリティ"],"kick":0,"speed":10,"stamina":14,"technique":5,"physical":0,"jump":0,"mental":0,"total":29,"fatigue":115},
+  {"name":"怒濤の全員攻撃","cards":["ドリブル","パス","サイン会"],"kick":3,"speed":10,"stamina":6,"technique":4,"physical":0,"jump":6,"mental":0,"total":29,"fatigue":105},
+  {"name":"変幻ドリブラー","cards":["ドリブル","リフティング","エアロビクス"],"kick":0,"speed":14,"stamina":6,"technique":7,"physical":0,"jump":0,"mental":0,"total":27,"fatigue":150},
+  {"name":"ボンバーヘッド","cards":["マンツーマン","ヘディング","ミニキャンプ"],"kick":5,"speed":0,"stamina":4,"technique":0,"physical":0,"jump":12,"mental":6,"total":27,"fatigue":90},
+  {"name":"ウルトラリラックス","cards":["ストレッチ","アロマテラピー","温泉"],"kick":0,"speed":0,"stamina":6,"technique":2,"physical":10,"jump":0,"mental":8,"total":26,"fatigue":65},
+  {"name":"空中戦のスペシャリスト","cards":["セットプレー","ヘディング","キック"],"kick":2,"speed":0,"stamina":0,"technique":2,"physical":6,"jump":16,"mental":0,"total":26,"fatigue":110},
+  {"name":"最後の切り札","cards":["セットプレー","パス","温泉"],"kick":8,"speed":8,"stamina":0,"technique":0,"physical":6,"jump":4,"mental":0,"total":26,"fatigue":75},
+  {"name":"サイドアタック","cards":["ドリブル","ランニング"],"kick":0,"speed":10,"stamina":10,"technique":0,"physical":2,"jump":0,"mental":4,"total":26,"fatigue":126}
+]
