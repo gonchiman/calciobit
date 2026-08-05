@@ -153,6 +153,8 @@ a {
 
 .table-shell {
   position: relative;
+  width: fit-content;
+  max-width: 100%;
   min-height: 360px;
   max-height: calc(100vh - 190px);
   overflow: auto;
@@ -396,7 +398,3 @@ tbody tr:hover td:first-child {
     line-height: 1.4;
   }
 
-  .data-note {
-    line-height: 1.5;
-  }
-}
