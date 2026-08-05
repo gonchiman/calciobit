@@ -24,7 +24,15 @@ function App() {
             target="_blank"
             rel="noreferrer"
           >
-            データ参照元
+            能力値・疲労の参照元
+          </a>
+          {' / '}
+          <a
+            href="https://calciobit.com/secret/positioning/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            ポジショニング値の参照元
           </a>
         </p>
       </div>

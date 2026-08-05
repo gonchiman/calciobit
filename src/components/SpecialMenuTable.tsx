@@ -70,6 +70,62 @@ const columns = [
     header: '疲労',
     cell: (info) => info.getValue(),
   }),
+  columnHelper.accessor('offenseQuality', {
+    header: '攻撃クオリティ',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('support', {
+    header: 'サポート',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('triangle', {
+    header: 'トライアングル',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('loseMark', {
+    header: 'マークを外す',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('overlap', {
+    header: 'オーバーラップ',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('diagonalRun', {
+    header: 'ダイアゴナルラン',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('spaceRun', {
+    header: 'スペースに走り込む',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('goalFront', {
+    header: 'ゴール前待機',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('defenseQuality', {
+    header: '守備クオリティ',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('zoneMarking', {
+    header: 'ゾーンマーキング',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('manMarking', {
+    header: 'マンツーマン',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('pressing', {
+    header: 'プレッシング',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('shootCut', {
+    header: 'シュートカット',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
+  columnHelper.accessor('intercept', {
+    header: 'インターセプト',
+    cell: (info) => <NumberCell value={info.getValue()} />,
+  }),
 ]
 
 type SpecialMenuTableProps = {
@@ -133,7 +189,7 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
           <p className="eyebrow">SPECIAL TRAINING</p>
           <h2 id="database-heading">スペシャルメニュー</h2>
           <p className="section-description">
-            メニュー名や課題で検索し、能力値を優先順位つきで並べ替えられます。
+            メニュー名や課題で検索し、能力値・ポジショニング値を優先順位つきで並べ替えられます。
           </p>
         </div>
         <div className="result-count" aria-live="polite">
