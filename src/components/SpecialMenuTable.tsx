@@ -259,6 +259,11 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
                     (item) => item.id === header.column.id,
                   )
                   const canSort = header.column.getCanSort()
+                  const shouldReplaceDefaultSort =
+                    sorting.length === 1 &&
+                    sorting[0].id === 'total' &&
+                    sorting[0].desc &&
+                    header.column.id !== 'total'
 
                   return (
                     <th key={header.id} scope="col">
@@ -267,7 +272,10 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
                           type="button"
                           className="sort-button"
                           onClick={() =>
-                            header.column.toggleSorting(undefined, true)
+                            header.column.toggleSorting(
+                              undefined,
+                              !shouldReplaceDefaultSort,
+                            )
                           }
                           aria-label={`${String(header.column.columnDef.header)}を並べ替え`}
                         >
