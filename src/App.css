@@ -167,7 +167,7 @@ table {
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -181,7 +181,7 @@ th {
   border-bottom: 1px solid #aaa;
   background: var(--header);
   color: #333;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-align: center;
   white-space: nowrap;
@@ -295,7 +295,7 @@ tbody tr:hover td:first-child {
 
 .training-card {
   color: #444;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
