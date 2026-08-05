@@ -22,4 +22,4 @@ npm run dev
 
 ## データ
 
-初期版では代表的なスペシャルメニュー13件を収録しています。データは `src/data/specialMenus.json` に追加します。
+スペシャルメニュー全132件を `src/data/specialMenus.json` に収録しています。
