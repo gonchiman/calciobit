@@ -249,7 +249,7 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
       </div>
 
       <div className="table-shell">
-        <table>
+        <table className="menu-table">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
