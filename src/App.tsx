@@ -18,7 +18,7 @@ function App() {
         </div>
 
         <p className="data-note">
-          現在は代表的な13件を収録しています。今後、全メニューとポジショニング値を追加します。{' '}
+          スペシャルメニュー全132件を収録しています。{' '}
           <a
             href="https://calciobit.com/tokkun/special-menu/"
             target="_blank"
