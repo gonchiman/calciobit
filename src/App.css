@@ -398,3 +398,7 @@ tbody tr:hover td:first-child {
     line-height: 1.4;
   }
 
+  .data-note {
+    line-height: 1.5;
+  }
+}
