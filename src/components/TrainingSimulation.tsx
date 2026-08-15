@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   estimatePlayerType,
   getCurrentPositioningValues,
@@ -154,6 +154,24 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
   const [selections, setSelections] = useState<Selection[]>([])
   const [currentType, setCurrentType] = useState<PlayerType>('バランス')
   const [targetType, setTargetType] = useState<PlayerType | ''>('')
+  const [detailMenu, setDetailMenu] = useState<SpecialMenu | null>(null)
+
+  useEffect(() => {
+    if (!detailMenu) return
+
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setDetailMenu(null)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [detailMenu])
 
   const cardOptions = useMemo(
     () =>
@@ -422,10 +440,16 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
               return (
                 <div className="recommendation-row" key={menu.name}>
                   <span className="recommendation-rank">{index + 1}</span>
-                  <div className="recommendation-name">
+                  <button
+                    type="button"
+                    className="recommendation-name training-info-trigger"
+                    onClick={() => setDetailMenu(menu)}
+                    aria-label={`${menu.name}の情報を表示`}
+                    title="特訓情報を表示"
+                  >
                     <strong>{menu.name}</strong>
                     <span>{menu.cards.join(' / ')}</span>
-                  </div>
+                  </button>
                   <span className="recommendation-score">
                     接近量 <strong>+{approachAmount}</strong>
                     {selectedCount > 0 && ` / ${selectedCount}回`}
@@ -561,10 +585,16 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
 
                 return (
                   <div className="menu-result-row" key={menu.name}>
-                    <div className="menu-result-name">
+                    <button
+                      type="button"
+                      className="menu-result-name training-info-trigger"
+                      onClick={() => setDetailMenu(menu)}
+                      aria-label={`${menu.name}の情報を表示`}
+                      title="特訓情報を表示"
+                    >
                       <strong>{menu.name}</strong>
                       <span>{menu.cards.join(' / ')}</span>
-                    </div>
+                    </button>
                     <span className="menu-result-total">
                       {sortLabel}{' '}
                       {sortKey === 'fatigue'
@@ -612,10 +642,16 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
             <div className="simulation-plan-list">
               {selectedMenus.map(({ menu, count }) => (
                 <div className="simulation-plan-row" key={menu.name}>
-                  <div className="simulation-plan-name">
+                  <button
+                    type="button"
+                    className="simulation-plan-name training-info-trigger"
+                    onClick={() => setDetailMenu(menu)}
+                    aria-label={`${menu.name}の情報を表示`}
+                    title="特訓情報を表示"
+                  >
                     <strong>{menu.name}</strong>
                     <span>{menu.cards.join(' / ')}</span>
-                  </div>
+                  </button>
                   <div className="quantity-control">
                     <button
                       type="button"
@@ -767,6 +803,92 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
           </a>
         </p>
       </section>
+
+      {detailMenu && (
+        <div
+          className="training-detail-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setDetailMenu(null)
+          }}
+        >
+          <section
+            className="training-detail-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="training-detail-heading"
+          >
+            <header className="training-detail-header">
+              <div>
+                <h2 id="training-detail-heading">{detailMenu.name}</h2>
+                <p>{detailMenu.cards.join(' / ')}</p>
+              </div>
+              <button
+                type="button"
+                className="training-detail-close"
+                onClick={() => setDetailMenu(null)}
+                aria-label="特訓情報を閉じる"
+                title="閉じる"
+                autoFocus
+              >
+                ×
+              </button>
+            </header>
+
+            <div className="training-detail-summary">
+              <div>
+                <span>必要な課題</span>
+                <strong>{detailMenu.cards.join(' / ')}</strong>
+              </div>
+              <div>
+                <span>基本合計</span>
+                <strong className={valueTone(detailMenu.total)}>
+                  {formatGain(detailMenu.total)}
+                </strong>
+              </div>
+              <div>
+                <span>疲労蓄積値</span>
+                <strong>{detailMenu.fatigue}</strong>
+              </div>
+            </div>
+
+            <div className="training-detail-metrics">
+              <div>
+                <h3>基本パラメータ</h3>
+                <table className="training-detail-table">
+                  <tbody>
+                    {basicMetrics.map((metric) => (
+                      <tr key={metric.key}>
+                        <th scope="row">{metric.label}</th>
+                        <td className={valueTone(detailMenu[metric.key])}>
+                          {formatGain(detailMenu[metric.key])}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {hiddenMetricGroups.map((group) => (
+                <div key={group.label}>
+                  <h3>{group.label}</h3>
+                  <table className="training-detail-table">
+                    <tbody>
+                      {group.metrics.map((metric) => (
+                        <tr key={metric.key}>
+                          <th scope="row">{metric.label}</th>
+                          <td className={valueTone(detailMenu[metric.key])}>
+                            {formatGain(detailMenu[metric.key])}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   )
 }

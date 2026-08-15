@@ -488,6 +488,26 @@ a {
   white-space: nowrap;
 }
 
+.training-info-trigger {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.training-info-trigger:hover strong {
+  text-decoration: underline;
+}
+
+.training-info-trigger:focus-visible {
+  outline: 2px solid #555;
+  outline-offset: 3px;
+}
+
 .menu-result-total {
   color: #444;
   font-size: 12px;
@@ -1143,6 +1163,158 @@ a {
   line-height: 1.5;
 }
 
+.training-detail-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 42%);
+}
+
+.training-detail-dialog {
+  width: min(920px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 24%);
+}
+
+.training-detail-header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #aaa;
+  background: #fff;
+}
+
+.training-detail-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.training-detail-header p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.training-detail-close {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #aaa;
+  background: #fff;
+  color: #444;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.training-detail-close:hover {
+  background: #eee;
+}
+
+.training-detail-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px 130px;
+  border-bottom: 1px solid #aaa;
+}
+
+.training-detail-summary > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 10px 14px;
+  border-right: 1px solid #ddd;
+}
+
+.training-detail-summary > div:last-child {
+  border-right: 0;
+}
+
+.training-detail-summary span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.training-detail-summary strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.training-detail-summary .positive,
+.training-detail-table .positive {
+  color: var(--positive);
+}
+
+.training-detail-summary .negative,
+.training-detail-table .negative {
+  color: var(--negative);
+}
+
+.training-detail-summary .zero,
+.training-detail-table .zero {
+  color: #888;
+}
+
+.training-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 18px;
+  padding: 16px;
+}
+
+.training-detail-metrics > div {
+  min-width: 0;
+}
+
+.training-detail-metrics h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.training-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 1px solid #aaa;
+  font-size: 12px;
+}
+
+.training-detail-table th,
+.training-detail-table td {
+  height: 34px;
+  padding: 5px 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.training-detail-table th {
+  color: #444;
+  font-weight: 600;
+  text-align: left;
+}
+
+.training-detail-table td {
+  width: 56px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+}
+
 .empty-state {
   display: grid;
   min-height: 120px;
@@ -1272,6 +1444,10 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .training-detail-metrics {
+    grid-template-columns: 1fr;
+  }
+
   .simulation-picker .comparison-filters {
     grid-template-columns: 1fr 1fr;
   }
@@ -1375,6 +1551,36 @@ a {
 
   .simulation-summary strong {
     font-size: 16px;
+  }
+
+  .training-detail-backdrop {
+    padding: 8px;
+  }
+
+  .training-detail-dialog {
+    max-height: calc(100vh - 16px);
+  }
+
+  .training-detail-header {
+    padding: 12px;
+  }
+
+  .training-detail-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .training-detail-summary > div:first-child {
+    grid-column: 1 / -1;
+    border-right: 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .training-detail-summary > div:nth-child(2) {
+    border-right: 1px solid #ddd;
+  }
+
+  .training-detail-metrics {
+    padding: 12px;
   }
 
   .data-note {
