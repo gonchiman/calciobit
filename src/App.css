@@ -403,6 +403,51 @@ a {
   gap: 8px;
 }
 
+.initial-filter {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.initial-filter > span {
+  color: #444;
+  font-size: 11px;
+}
+
+.initial-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.initial-filter-options button {
+  min-width: 48px;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid #aaa;
+  background: #fff;
+  color: #333;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.initial-filter-options button:hover {
+  border-color: #555;
+  background: #f3f3f3;
+}
+
+.initial-filter-options button.active {
+  border-color: #333;
+  background: #333;
+  color: #fff;
+}
+
+.initial-filter-options button:focus-visible {
+  outline: 2px solid #555;
+  outline-offset: 2px;
+}
+
 .selected-card-filters {
   display: flex;
   flex-wrap: wrap;

@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import type { SpecialMenu } from '../types'
+import { TrainingDetailDialog } from './TrainingDetailDialog'
 
 type MetricKey =
   | 'kick'
@@ -27,6 +28,66 @@ type MetricKey =
 type MetricGroup = {
   label: string
   metrics: Array<{ key: MetricKey; label: string }>
+}
+
+type InitialGroup =
+  | 'all'
+  | 'a'
+  | 'ka'
+  | 'sa'
+  | 'ta'
+  | 'na'
+  | 'ha'
+  | 'ma'
+  | 'ya'
+  | 'ra'
+  | 'wa'
+  | 'other'
+
+const initialGroups: Array<{ value: InitialGroup; label: string }> = [
+  { value: 'all', label: 'すべて' },
+  { value: 'a', label: 'あ行' },
+  { value: 'ka', label: 'か行' },
+  { value: 'sa', label: 'さ行' },
+  { value: 'ta', label: 'た行' },
+  { value: 'na', label: 'な行' },
+  { value: 'ha', label: 'は行' },
+  { value: 'ma', label: 'ま行' },
+  { value: 'ya', label: 'や行' },
+  { value: 'ra', label: 'ら行' },
+  { value: 'wa', label: 'わ行' },
+  { value: 'other', label: 'その他' },
+]
+
+const kanaByInitialGroup: Record<Exclude<InitialGroup, 'all' | 'other'>, string> = {
+  a: 'ぁあぃいうぅえぇおぉゔ',
+  ka: 'かがきぎくぐけげこご',
+  sa: 'さざしじすずせぜそぞ',
+  ta: 'ただちぢっつづてでとど',
+  na: 'なにぬねの',
+  ha: 'はばぱひびぴふぶぷへべぺほぼぽ',
+  ma: 'まみむめも',
+  ya: 'ゃやゅゆょよ',
+  ra: 'らりるれろ',
+  wa: 'ゎわゐゑをん',
+}
+
+function getInitialGroup(name: string): Exclude<InitialGroup, 'all'> {
+  const firstCharacter = name.trim().normalize('NFKC')[0]
+
+  if (!firstCharacter) return 'other'
+
+  const codePoint = firstCharacter.codePointAt(0)
+  const normalizedCharacter =
+    codePoint && codePoint >= 0x30a1 && codePoint <= 0x30f6
+      ? String.fromCodePoint(codePoint - 0x60)
+      : firstCharacter
+
+  const matchedGroup = Object.entries(kanaByInitialGroup).find(([, kana]) =>
+    kana.includes(normalizedCharacter),
+  )
+
+  return (matchedGroup?.[0] as Exclude<InitialGroup, 'all' | 'other'>) ?? 'other'
 }
 
 const metricGroups: MetricGroup[] = [
@@ -80,8 +141,10 @@ type SpecialMenuComparisonProps = {
 
 export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
   const [query, setQuery] = useState('')
+  const [initialGroup, setInitialGroup] = useState<InitialGroup>('all')
   const [selectedCards, setSelectedCards] = useState<string[]>([])
   const [selectedMenuNames, setSelectedMenuNames] = useState<string[]>([])
+  const [detailMenu, setDetailMenu] = useState<SpecialMenu | null>(null)
 
   const cardOptions = useMemo(
     () =>
@@ -96,11 +159,12 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
 
     return menus.filter(
       (menu) =>
+        (initialGroup === 'all' || getInitialGroup(menu.name) === initialGroup) &&
         (!normalizedQuery ||
           menu.name.toLocaleLowerCase('ja').includes(normalizedQuery)) &&
         selectedCards.every((card) => menu.cards.includes(card)),
     )
-  }, [menus, query, selectedCards])
+  }, [initialGroup, menus, query, selectedCards])
 
   const selectedMenus = useMemo(
     () =>
@@ -130,6 +194,7 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
 
   const resetSearch = () => {
     setQuery('')
+    setInitialGroup('all')
     setSelectedCards([])
   }
 
@@ -185,6 +250,23 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
           </button>
         </div>
 
+        <div className="initial-filter" role="group" aria-label="特訓名の頭文字">
+          <span>頭文字</span>
+          <div className="initial-filter-options">
+            {initialGroups.map((group) => (
+              <button
+                key={group.value}
+                type="button"
+                className={initialGroup === group.value ? 'active' : undefined}
+                aria-pressed={initialGroup === group.value}
+                onClick={() => setInitialGroup(group.value)}
+              >
+                {group.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {selectedCards.length > 0 && (
           <div className="selected-card-filters" aria-label="選択中の課題">
             {selectedCards.map((card) => (
@@ -214,10 +296,16 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
 
               return (
                 <div className="menu-result-row" key={menu.name}>
-                  <div className="menu-result-name">
+                  <button
+                    type="button"
+                    className="menu-result-name training-info-trigger"
+                    onClick={() => setDetailMenu(menu)}
+                    aria-label={`${menu.name}の情報を表示`}
+                    title="特訓情報を表示"
+                  >
                     <strong>{menu.name}</strong>
                     <span>{menu.cards.join(' / ')}</span>
-                  </div>
+                  </button>
                   <span className="menu-result-total">合計 {menu.total}</span>
                   <button
                     type="button"
@@ -335,6 +423,13 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
           </div>
         )}
       </section>
+
+      {detailMenu && (
+        <TrainingDetailDialog
+          menu={detailMenu}
+          onClose={() => setDetailMenu(null)}
+        />
+      )}
     </section>
   )
 }
