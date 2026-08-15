@@ -31,7 +31,7 @@ export const positioningKeys = [
 ] as const
 
 export type PositioningKey = (typeof positioningKeys)[number]
-type EstimatableType = Exclude<PlayerType, 'バランス'>
+export type EstimatableType = Exclude<PlayerType, 'バランス'>
 
 // GBA版のタイプ別ポジショニング基準値。配列順はpositioningKeysに対応する。
 const typeProfiles: Record<EstimatableType, readonly number[]> = {
@@ -48,7 +48,7 @@ const typeProfiles: Record<EstimatableType, readonly number[]> = {
   ストライカー: [10, 20, 20, 10, 40, 5, 10, 100, 10, 90, 90, 100],
 }
 
-const estimatableTypes = playerTypes.filter(
+export const estimatableTypes = playerTypes.filter(
   (type): type is EstimatableType => type !== 'バランス',
 )
 
@@ -77,6 +77,58 @@ export function getCurrentPositioningValues(type: PlayerType) {
   ) as Record<PositioningKey, number>
 }
 
+export function normalizePositioningValues(
+  values: Record<PositioningKey, number>,
+) {
+  const maximum = Math.max(...positioningKeys.map((key) => values[key]))
+
+  return Object.fromEntries(
+    positioningKeys.map((key) => [
+      key,
+      maximum > 0 ? (values[key] / maximum) * 100 : 0,
+    ]),
+  ) as Record<PositioningKey, number>
+}
+
+export function getTypeDistance(
+  values: Record<PositioningKey, number>,
+  type: EstimatableType,
+) {
+  const normalizedValues = normalizePositioningValues(values)
+
+  return getNormalizedTypeDistance(normalizedValues, type)
+}
+
+function getNormalizedTypeDistance(
+  normalizedValues: Record<PositioningKey, number>,
+  type: EstimatableType,
+) {
+
+  return positioningKeys.reduce(
+    (sum, key, index) =>
+      sum + Math.abs(typeProfiles[type][index] - normalizedValues[key]),
+    0,
+  )
+}
+
+export function classifyPositioningValues(
+  values: Record<PositioningKey, number>,
+) {
+  const normalizedValues = normalizePositioningValues(values)
+
+  return estimatableTypes.reduce(
+    (closest, type) => {
+      const distance = getNormalizedTypeDistance(normalizedValues, type)
+
+      return distance < closest.distance ? { type, distance } : closest
+    },
+    {
+      type: estimatableTypes[0],
+      distance: Number.POSITIVE_INFINITY,
+    },
+  ).type
+}
+
 export function estimatePlayerType(
   currentType: PlayerType,
   gains: Record<PositioningKey, number>,
@@ -85,27 +137,14 @@ export function estimatePlayerType(
   if (!hasTraining) return currentType
 
   const currentValues = getCurrentPositioningValues(currentType)
-  const adjustedValues = positioningKeys.map((key) =>
-    Math.max(0, currentValues[key] + gains[key]),
-  )
-  const maximum = Math.max(...adjustedValues)
+  const adjustedValues = Object.fromEntries(
+    positioningKeys.map((key) => [
+      key,
+      Math.max(0, currentValues[key] + gains[key]),
+    ]),
+  ) as Record<PositioningKey, number>
 
-  if (maximum <= 0) return currentType
+  if (Math.max(...Object.values(adjustedValues)) <= 0) return currentType
 
-  const normalizedValues = adjustedValues.map((value) =>
-    (value / maximum) * 100,
-  )
-
-  return estimatableTypes.reduce(
-    (closest, type) => {
-      const distance = typeProfiles[type].reduce(
-        (sum, referenceValue, index) =>
-          sum + Math.abs(referenceValue - normalizedValues[index]),
-        0,
-      )
-
-      return distance < closest.distance ? { type, distance } : closest
-    },
-    { type: estimatableTypes[0], distance: Number.POSITIVE_INFINITY },
-  ).type
+  return classifyPositioningValues(adjustedValues)
 }

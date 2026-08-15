@@ -4,8 +4,8 @@ import {
   type HiddenParameterPrediction as PredictionResult,
 } from '../hiddenParameterPrediction'
 import {
-  playerTypes,
-  type PlayerType,
+  estimatableTypes,
+  type EstimatableType,
   type PositioningKey,
 } from '../typeEstimation'
 import type { SpecialMenu } from '../types'
@@ -54,9 +54,9 @@ const parameterLabels: Record<PositioningKey, string> = {
 }
 
 const confidenceLabels: Record<PredictionResult['confidence'], string> = {
-  high: '高め',
+  high: '高い',
   medium: '中程度',
-  low: '低め',
+  low: '低い',
 }
 
 function valueTone(value: number) {
@@ -80,8 +80,8 @@ type HiddenParameterPredictionProps = {
 export function HiddenParameterPrediction({
   menus,
 }: HiddenParameterPredictionProps) {
-  const [beforeType, setBeforeType] = useState<PlayerType | ''>('')
-  const [afterType, setAfterType] = useState<PlayerType | ''>('')
+  const [beforeType, setBeforeType] = useState<EstimatableType | ''>('')
+  const [afterType, setAfterType] = useState<EstimatableType | ''>('')
   const [menuName, setMenuName] = useState('')
   const [query, setQuery] = useState('')
 
@@ -129,7 +129,7 @@ export function HiddenParameterPrediction({
         <div>
           <h2 id="prediction-heading">裏パラ予測</h2>
           <p className="section-description">
-            特訓前後のタイプと実行した特訓から、表示されないポジショニング値を逆算します。
+            特訓前後のタイプと実行した特訓から、最大値100換算のポジショニング構成を逆算します。
           </p>
         </div>
       </div>
@@ -141,11 +141,11 @@ export function HiddenParameterPrediction({
             <select
               value={beforeType}
               onChange={(event) =>
-                setBeforeType(event.target.value as PlayerType | '')
+                setBeforeType(event.target.value as EstimatableType | '')
               }
             >
               <option value="">選択してください</option>
-              {playerTypes.map((type) => (
+              {estimatableTypes.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>
@@ -162,11 +162,11 @@ export function HiddenParameterPrediction({
             <select
               value={afterType}
               onChange={(event) =>
-                setAfterType(event.target.value as PlayerType | '')
+                setAfterType(event.target.value as EstimatableType | '')
               }
             >
               <option value="">選択してください</option>
-              {playerTypes.map((type) => (
+              {estimatableTypes.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>
@@ -174,6 +174,10 @@ export function HiddenParameterPrediction({
             </select>
           </label>
         </div>
+
+        <p className="prediction-balance-note">
+          ※バランスは基準値がないため予測対象外
+        </p>
 
         <div className="prediction-training-fields">
           <label className="field">
@@ -248,10 +252,19 @@ export function HiddenParameterPrediction({
         <summary>予測値の見方と制約</summary>
         <div>
           <p>
-            タイプは12項目の絶対値ではなく、最も高い項目を100とした割合の傾向で決まると仮定しています。特訓前後のタイプ判定を同時に満たす候補を探索し、その中で各タイプの基準傾向に最も近い値を「予測値」としています。
+            指定された判定仕様どおり、12項目の最大値が100になるように換算し、11タイプの基準値との差の絶対値合計が最小になるタイプを判定します。特訓前後の判定を同時に満たす候補から、基準値に最も近い構成を「予測値」としています。
           </p>
           <p>
-            同じタイプになる数値の組み合わせは複数あるため、実際の値を一意には特定できません。「推定幅」は条件に合う有力候補の範囲です。オフェンス／ディフェンスクオリティはタイプ判定に使われないため、変化量だけを表示します。
+            表示値は特訓前の最大値を100とした判定用の換算値で、ゲーム内部の絶対値ではありません。同じタイプになる組み合わせは複数あるため、「推定幅」も併記します。バランスとクオリティ2項目はタイプから判定できません。
+          </p>
+          <p>
+            <a
+              href="https://docs.google.com/document/d/1Iw6IkM2GaSNHSlH5mCg2TnpQ4SVq41CRmv0fXT97X-I/edit?tab=t.0"
+              target="_blank"
+              rel="noreferrer"
+            >
+              タイプの判定仕様
+            </a>
           </p>
         </div>
       </details>
@@ -260,8 +273,8 @@ export function HiddenParameterPrediction({
 }
 
 type PredictionOutputProps = {
-  beforeType: PlayerType
-  afterType: PlayerType
+  beforeType: EstimatableType
+  afterType: EstimatableType
   menu: SpecialMenu
   prediction: PredictionResult
 }
@@ -286,7 +299,7 @@ function PredictionOutput({
           </p>
         </div>
         <span className={`prediction-confidence ${prediction.confidence}`}>
-          推定精度 {confidenceLabels[prediction.confidence]}
+          候補の収束度 {confidenceLabels[prediction.confidence]}
         </span>
       </div>
 
@@ -322,8 +335,8 @@ function PredictionOutput({
                     <th scope="col">項目</th>
                     <th scope="col">特訓前予測</th>
                     <th scope="col">推定幅</th>
-                    <th scope="col">変化</th>
-                    <th scope="col">特訓後予測</th>
+                    <th scope="col">特訓の増減</th>
+                    <th scope="col">特訓後換算</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -353,7 +366,7 @@ function PredictionOutput({
       </div>
 
       <p className="prediction-note">
-        ※値は0〜100の推定スケールです。タイプから絶対値を確定できないため、予測値と推定幅をセットで確認してください。
+        ※特訓前の最大値を100とした判定用換算値です。特訓後は増減を適用してから再び最大値100に換算しています。ゲーム内部の絶対値を確定するものではありません。
       </p>
     </div>
   )

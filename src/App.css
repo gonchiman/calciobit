@@ -1238,6 +1238,13 @@ a {
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
 }
 
+.prediction-balance-note {
+  grid-column: 1;
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
 .prediction-arrow {
   display: grid;
   height: 34px;
@@ -1687,6 +1694,10 @@ a {
   .prediction-input-panel .reset-button {
     grid-column: 1 / -1;
   }
+
+  .prediction-balance-note {
+    grid-column: 1;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1799,6 +1810,10 @@ a {
   .prediction-input-panel .reset-button {
     grid-column: auto;
     width: 100%;
+  }
+
+  .prediction-balance-note {
+    grid-column: auto;
   }
 
   .prediction-tables {

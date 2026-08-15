@@ -1,14 +1,15 @@
 import {
+  classifyPositioningValues,
+  getTypeDistance,
   getTypeReferenceValues,
-  playerTypes,
+  normalizePositioningValues,
   positioningKeys,
-  type PlayerType,
+  type EstimatableType,
   type PositioningKey,
 } from './typeEstimation'
 import type { SpecialMenu } from './types'
 
-const MIN_VALUE = 0
-const MAX_VALUE = 100
+const NORMALIZED_MAXIMUM = 100
 const SEARCH_STEPS = [8, 4, 2, 1] as const
 
 type Values = Record<PositioningKey, number>
@@ -39,85 +40,56 @@ export type HiddenParameterPrediction = {
   candidateCount: number
 }
 
-function clamp(value: number) {
-  return Math.min(MAX_VALUE, Math.max(MIN_VALUE, Math.round(value)))
-}
-
-function valuesFromArray(values: readonly number[]): Values {
-  return Object.fromEntries(
-    positioningKeys.map((key, index) => [key, clamp(values[index])]),
-  ) as Values
-}
-
 function valuesToArray(values: Values) {
   return positioningKeys.map((key) => values[key])
 }
 
-function getNormalizedProfile(type: PlayerType) {
-  const reference = getTypeReferenceValues(type)
-  const values = valuesToArray(reference)
-  const maximum = Math.max(...values)
+function normalizeCandidate(values: readonly number[]): Values {
+  const nonNegativeValues = values.map((value) => Math.max(0, value))
+  const maximum = Math.max(...nonNegativeValues)
 
-  return values.map((value) => (maximum > 0 ? (value / maximum) * 100 : 0))
-}
+  if (maximum <= 0) {
+    return Object.fromEntries(positioningKeys.map((key) => [key, 0])) as Values
+  }
 
-const normalizedTypeProfiles = Object.fromEntries(
-  playerTypes.map((type) => [type, getNormalizedProfile(type)]),
-) as Record<PlayerType, number[]>
-
-function normalize(values: readonly number[]) {
-  const maximum = Math.max(...values)
-
-  return maximum > 0
-    ? values.map((value) => (value / maximum) * 100)
-    : values.map(() => 0)
-}
-
-function distanceToType(values: Values, type: PlayerType) {
-  const normalizedValues = normalize(valuesToArray(values))
-  const profile = normalizedTypeProfiles[type]
-
-  return normalizedValues.reduce(
-    (sum, value, index) => sum + Math.abs(value - profile[index]),
-    0,
-  )
-}
-
-function classify(values: Values) {
-  return playerTypes.reduce(
-    (closest, type) => {
-      const distance = distanceToType(values, type)
-      return distance < closest.distance ? { type, distance } : closest
-    },
-    { type: playerTypes[0] as PlayerType, distance: Number.POSITIVE_INFINITY },
-  ).type
+  return Object.fromEntries(
+    positioningKeys.map((key, index) => [
+      key,
+      Math.round((nonNegativeValues[index] / maximum) * NORMALIZED_MAXIMUM),
+    ]),
+  ) as Values
 }
 
 function applyGains(values: Values, gains: Values) {
   return Object.fromEntries(
-    positioningKeys.map((key) => [key, clamp(values[key] + gains[key])]),
+    positioningKeys.map((key) => [
+      key,
+      Math.max(0, values[key] + gains[key]),
+    ]),
   ) as Values
 }
 
 function createCandidate(
   beforeValues: readonly number[],
   gains: Values,
-  beforeType: PlayerType,
-  afterType: PlayerType,
+  beforeType: EstimatableType,
+  afterType: EstimatableType,
 ): Candidate {
-  const before = valuesFromArray(beforeValues)
-  const after = applyGains(before, gains)
-  const matchesTransition =
-    classify(before) === beforeType && classify(after) === afterType
-  const mismatchPenalty = matchesTransition ? 0 : 2_000
+  const before = normalizeCandidate(beforeValues)
+  const afterWithGains = applyGains(before, gains)
+  const after = normalizePositioningValues(afterWithGains)
+  const beforeMatches = classifyPositioningValues(before) === beforeType
+  const afterMatches = classifyPositioningValues(after) === afterType
+  const matchesTransition = beforeMatches && afterMatches
 
   return {
     before,
     after,
     score:
-      distanceToType(before, beforeType) +
-      distanceToType(after, afterType) +
-      mismatchPenalty,
+      getTypeDistance(before, beforeType) +
+      getTypeDistance(after, afterType) +
+      (beforeMatches ? 0 : 1_000) +
+      (afterMatches ? 0 : 1_000),
     matchesTransition,
   }
 }
@@ -125,33 +97,31 @@ function createCandidate(
 function improveCandidate(
   seed: Candidate,
   gains: Values,
-  beforeType: PlayerType,
-  afterType: PlayerType,
+  beforeType: EstimatableType,
+  afterType: EstimatableType,
 ) {
   let best = seed
 
   SEARCH_STEPS.forEach((step) => {
-    for (let pass = 0; pass < 2; pass += 1) {
-      positioningKeys.forEach((key) => {
-        const current = valuesToArray(best.before)
-        const index = positioningKeys.indexOf(key)
+    positioningKeys.forEach((key) => {
+      const current = valuesToArray(best.before)
+      const index = positioningKeys.indexOf(key)
 
-        const changes = [-step, step]
+      const changes = [-step, step]
 
-        changes.forEach((change) => {
-          const next = [...current]
-          next[index] = clamp(next[index] + change)
-          const candidate = createCandidate(
-            next,
-            gains,
-            beforeType,
-            afterType,
-          )
+      changes.forEach((change) => {
+        const next = [...current]
+        next[index] += change
+        const candidate = createCandidate(
+          next,
+          gains,
+          beforeType,
+          afterType,
+        )
 
-          if (candidate.score < best.score) best = candidate
-        })
+        if (candidate.score < best.score) best = candidate
       })
-    }
+    })
   })
 
   return best
@@ -169,30 +139,29 @@ function makeRandom(seed: number) {
 function collectNearbyCandidates(
   seeds: Candidate[],
   gains: Values,
-  beforeType: PlayerType,
-  afterType: PlayerType,
+  beforeType: EstimatableType,
+  afterType: EstimatableType,
 ) {
   const matchingSeeds = seeds.filter((candidate) => candidate.matchesTransition)
   if (matchingSeeds.length === 0) return []
 
   const bestScore = Math.min(...matchingSeeds.map((candidate) => candidate.score))
   const accepted = matchingSeeds.filter(
-    (candidate) => candidate.score <= bestScore + 45,
+    (candidate) => candidate.score <= bestScore + 35,
   )
   const random = makeRandom(
     beforeType.length * 97 + afterType.length * 193 + gains.support * 389,
   )
   let current = accepted[0]
 
-  for (let attempt = 0; attempt < 12_000; attempt += 1) {
+  for (let attempt = 0; attempt < 4_000; attempt += 1) {
     if (attempt % 120 === 0) {
       current = accepted[Math.floor(random() * accepted.length)] ?? accepted[0]
     }
 
     const nextValues = valuesToArray(current.before)
     const index = Math.floor(random() * positioningKeys.length)
-    const change = Math.floor(random() * 13) - 6
-    nextValues[index] = clamp(nextValues[index] + change)
+    nextValues[index] += Math.floor(random() * 13) - 6
     const candidate = createCandidate(
       nextValues,
       gains,
@@ -200,10 +169,7 @@ function collectNearbyCandidates(
       afterType,
     )
 
-    if (
-      candidate.matchesTransition &&
-      candidate.score <= bestScore + 45
-    ) {
+    if (candidate.matchesTransition && candidate.score <= bestScore + 35) {
       accepted.push(candidate)
       current = candidate
     }
@@ -213,39 +179,42 @@ function collectNearbyCandidates(
 }
 
 export function predictHiddenParameters(
-  beforeType: PlayerType,
-  afterType: PlayerType,
+  beforeType: EstimatableType,
+  afterType: EstimatableType,
   menu: SpecialMenu,
 ): HiddenParameterPrediction {
-  const beforeProfile = normalizedTypeProfiles[beforeType]
-  const afterProfile = normalizedTypeProfiles[afterType]
+  const beforeProfile = getTypeReferenceValues(beforeType)
+  const afterProfile = getTypeReferenceValues(afterType)
+  const beforeProfileValues = valuesToArray(beforeProfile)
+  const afterProfileValues = valuesToArray(afterProfile)
   const gains = Object.fromEntries(
     positioningKeys.map((key) => [key, menu[key]]),
   ) as Values
   const initialCandidates: Candidate[] = []
 
-  for (let scale = 6; scale <= MAX_VALUE; scale += 2) {
-    for (let blendIndex = 0; blendIndex <= 50; blendIndex += 1) {
-      const blend = blendIndex / 50
+  for (let blendIndex = 0; blendIndex <= 100; blendIndex += 1) {
+    const blend = blendIndex / 100
+
+    const gainWeights = [0, 0.5, 1]
+
+    gainWeights.forEach((gainWeight) => {
       const beforeValues = positioningKeys.map((key, index) => {
         const blendedProfile =
-          beforeProfile[index] * (1 - blend) + afterProfile[index] * blend
+          beforeProfileValues[index] * (1 - blend) +
+          afterProfileValues[index] * blend
 
-        return (
-          (blendedProfile * scale) / 100 -
-          gains[key] * blend
-        )
+        return blendedProfile - gains[key] * blend * gainWeight
       })
 
       initialCandidates.push(
         createCandidate(beforeValues, gains, beforeType, afterType),
       )
-    }
+    })
   }
 
   const improvedCandidates = initialCandidates
     .sort((first, second) => first.score - second.score)
-    .slice(0, 32)
+    .slice(0, 24)
     .map((candidate) =>
       improveCandidate(candidate, gains, beforeType, afterType),
     )
@@ -259,7 +228,9 @@ export function predictHiddenParameters(
     afterType,
   )
   const matchesTransition = matchingCandidates.length > 0
-  const candidates = matchesTransition ? matchingCandidates : allCandidates.slice(0, 1)
+  const candidates = matchesTransition
+    ? matchingCandidates
+    : allCandidates.slice(0, 1)
   const best = candidates.reduce((closest, candidate) =>
     candidate.score < closest.score ? candidate : closest,
   )
@@ -274,9 +245,9 @@ export function predictHiddenParameters(
       beforeMin: Math.min(...beforeValues),
       beforeMax: Math.max(...beforeValues),
       gain: gains[key],
-      after: best.after[key],
-      afterMin: Math.min(...afterValues),
-      afterMax: Math.max(...afterValues),
+      after: Math.round(best.after[key]),
+      afterMin: Math.floor(Math.min(...afterValues)),
+      afterMax: Math.ceil(Math.max(...afterValues)),
     }
   })
   const averageRange =
