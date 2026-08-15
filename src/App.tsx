@@ -2,14 +2,17 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { SpecialMenuComparison } from './components/SpecialMenuComparison'
 import { SpecialMenuTable } from './components/SpecialMenuTable'
+import { TrainingSimulation } from './components/TrainingSimulation'
 import specialMenuData from './data/specialMenus.json'
 import type { SpecialMenu } from './types'
 
 const specialMenus = specialMenuData as SpecialMenu[]
-type Page = 'table' | 'compare'
+type Page = 'table' | 'compare' | 'simulate'
 
 function getPageFromHash(): Page {
-  return window.location.hash === '#compare' ? 'compare' : 'table'
+  if (window.location.hash === '#compare') return 'compare'
+  if (window.location.hash === '#simulate') return 'simulate'
+  return 'table'
 }
 
 function App() {
@@ -42,16 +45,21 @@ function App() {
             >
               特訓検索・比較
             </a>
+            <a
+              className={page === 'simulate' ? 'active' : undefined}
+              href="#simulate"
+              aria-current={page === 'simulate' ? 'page' : undefined}
+            >
+              特訓シミュレーション
+            </a>
           </nav>
         </div>
       </header>
 
       <div className="page-wrap">
-        {page === 'table' ? (
-          <SpecialMenuTable menus={specialMenus} />
-        ) : (
-          <SpecialMenuComparison menus={specialMenus} />
-        )}
+        {page === 'table' && <SpecialMenuTable menus={specialMenus} />}
+        {page === 'compare' && <SpecialMenuComparison menus={specialMenus} />}
+        {page === 'simulate' && <TrainingSimulation menus={specialMenus} />}
 
         <p className="data-note">
           スペシャルメニュー全132件を収録しています。{' '}
