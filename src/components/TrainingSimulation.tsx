@@ -106,6 +106,7 @@ const positioningLabels: Record<PositioningKey, string> = {
 
 type Selection = { name: string; count: number }
 type SelectedMenu = { menu: SpecialMenu; count: number }
+type RecommendedMenu = { menu: SpecialMenu; approachAmount: number }
 
 function createEmptyTotals() {
   return Object.fromEntries(
@@ -127,6 +128,20 @@ function isPositioningKey(key: NumericMetricKey): key is PositioningKey {
   return positioningKeys.includes(key as PositioningKey)
 }
 
+function getApproachAmount(
+  menu: SpecialMenu,
+  currentValues: Record<PositioningKey, number>,
+  targetValues: Record<PositioningKey, number>,
+) {
+  return positioningKeys.reduce((sum, key) => {
+    const currentDistance = Math.abs(targetValues[key] - currentValues[key])
+    const trainedValue = Math.max(0, currentValues[key] + menu[key])
+    const trainedDistance = Math.abs(targetValues[key] - trainedValue)
+
+    return sum + currentDistance - trainedDistance
+  }, 0)
+}
+
 type TrainingSimulationProps = {
   menus: SpecialMenu[]
 }
@@ -138,6 +153,7 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [selections, setSelections] = useState<Selection[]>([])
   const [currentType, setCurrentType] = useState<PlayerType>('バランス')
+  const [targetType, setTargetType] = useState<PlayerType | ''>('')
 
   const cardOptions = useMemo(
     () =>
@@ -215,7 +231,33 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
     positioningGains,
     totalTrainings > 0,
   )
-  const currentPositioningValues = getCurrentPositioningValues(currentType)
+  const currentPositioningValues = useMemo(
+    () => getCurrentPositioningValues(currentType),
+    [currentType],
+  )
+  const targetPositioningValues = useMemo(
+    () => (targetType ? getTypeReferenceValues(targetType) : null),
+    [targetType],
+  )
+  const recommendedMenus = useMemo(() => {
+    if (!targetPositioningValues) return []
+
+    return menus
+      .map((menu): RecommendedMenu => ({
+        menu,
+        approachAmount: getApproachAmount(
+          menu,
+          currentPositioningValues,
+          targetPositioningValues,
+        ),
+      }))
+      .filter(({ approachAmount }) => approachAmount > 0)
+      .sort(
+        (first, second) =>
+          second.approachAmount - first.approachAmount ||
+          first.menu.name.localeCompare(second.menu.name, 'ja'),
+      )
+  }, [currentPositioningValues, menus, targetPositioningValues])
 
   const addCardFilter = (card: string) => {
     if (card && !selectedCards.includes(card)) {
@@ -284,6 +326,23 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
           →
         </span>
 
+        <label className="field simulation-target-field">
+          <span>目標タイプ</span>
+          <select
+            value={targetType}
+            onChange={(event) =>
+              setTargetType(event.target.value as PlayerType | '')
+            }
+          >
+            <option value="">選択してください</option>
+            {playerTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <div className="estimated-type" aria-live="polite">
           <span>特訓後タイプ（推定）</span>
           <strong>{estimatedType}</strong>
@@ -313,16 +372,22 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
               {playerTypes.map((type) => {
                 const referenceValues = getTypeReferenceValues(type)
                 const isCurrent = type === currentType
+                const isTarget = type === targetType
                 const isEstimated = totalTrainings > 0 && type === estimatedType
 
                 return (
                   <tr
                     key={type}
-                    className={isCurrent || isEstimated ? 'active-type' : undefined}
+                    className={
+                      isCurrent || isTarget || isEstimated
+                        ? 'active-type'
+                        : undefined
+                    }
                   >
                     <th scope="row">
                       <span>{type}</span>
                       {isCurrent && <small>現在</small>}
+                      {isTarget && <small>目標</small>}
                       {isEstimated && <small>特訓後</small>}
                     </th>
                     {positioningKeys.map((key) => (
@@ -338,6 +403,51 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
           バランスは全12項目を20として試算しています。
         </p>
       </details>
+
+      <section
+        className="simulation-recommendations"
+        aria-labelledby="recommendation-heading"
+      >
+        <div className="subsection-heading">
+          <h3 id="recommendation-heading">おすすめ特訓</h3>
+          {targetType && <span>{recommendedMenus.length}件・接近量順</span>}
+        </div>
+
+        {!targetType ? (
+          <div className="recommendation-empty">目標タイプ未選択</div>
+        ) : recommendedMenus.length > 0 ? (
+          <div className="recommendation-list">
+            {recommendedMenus.map(({ menu, approachAmount }, index) => {
+              const selectedCount =
+                selections.find((selection) => selection.name === menu.name)
+                  ?.count ?? 0
+
+              return (
+                <div className="recommendation-row" key={menu.name}>
+                  <span className="recommendation-rank">{index + 1}</span>
+                  <div className="recommendation-name">
+                    <strong>{menu.name}</strong>
+                    <span>{menu.cards.join(' / ')}</span>
+                  </div>
+                  <span className="recommendation-score">
+                    接近量 <strong>+{approachAmount}</strong>
+                    {selectedCount > 0 && ` / ${selectedCount}回`}
+                  </span>
+                  <button
+                    type="button"
+                    className="add-menu-button"
+                    onClick={() => addTraining(menu.name)}
+                  >
+                    追加
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="recommendation-empty">目標に近づく特訓なし</div>
+        )}
+      </section>
 
       <div className="simulation-selection-grid">
         <section
@@ -598,15 +708,24 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
                   <tr>
                     <th scope="col">項目</th>
                     <th scope="col">現在</th>
+                    <th scope="col">目標差</th>
                     <th scope="col">変化</th>
                     <th scope="col">特訓後</th>
                   </tr>
                 </thead>
                 <tbody>
                   {group.metrics.map((metric) => {
-                    const currentValue = isPositioningKey(metric.key)
-                      ? currentPositioningValues[metric.key]
+                    const positioningKey = isPositioningKey(metric.key)
+                      ? metric.key
                       : null
+                    const currentValue = positioningKey
+                      ? currentPositioningValues[positioningKey]
+                      : null
+                    const targetDifference =
+                      positioningKey && targetPositioningValues
+                        ? targetPositioningValues[positioningKey] -
+                          currentPositioningValues[positioningKey]
+                        : null
                     const afterValue =
                       currentValue === null
                         ? null
@@ -616,6 +735,17 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
                       <tr key={metric.key}>
                         <th scope="row">{metric.label}</th>
                         <td>{currentValue ?? '—'}</td>
+                        <td
+                          className={
+                            targetDifference === null
+                              ? 'zero'
+                              : valueTone(targetDifference)
+                          }
+                        >
+                          {targetDifference === null
+                            ? '—'
+                            : formatGain(targetDifference)}
+                        </td>
                         <td className={valueTone(totals[metric.key])}>
                           {formatGain(totals[metric.key])}
                         </td>
@@ -630,7 +760,7 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
         </div>
 
         <p className="simulation-type-note">
-          ※現在の裏パラとタイプはGBA版の基準値を用いた試算です。バランスは全項目を20とし、クオリティ2項目は基準値がないため「—」で表示します。{' '}
+          ※目標差は「目標タイプの基準値 - 現在値」です。現在の裏パラとタイプはGBA版の基準値を用いた試算で、バランスは全項目を20としています。クオリティ2項目は基準値がないため「—」で表示します。{' '}
           <a
             href="https://docs.google.com/document/d/1Iw6IkM2GaSNHSlH5mCg2TnpQ4SVq41CRmv0fXT97X-I/edit?tab=t.0"
             target="_blank"
