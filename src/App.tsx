@@ -2,16 +2,18 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { SpecialMenuComparison } from './components/SpecialMenuComparison'
 import { SpecialMenuTable } from './components/SpecialMenuTable'
+import { HiddenParameterPrediction } from './components/HiddenParameterPrediction'
 import { TrainingSimulation } from './components/TrainingSimulation'
 import specialMenuData from './data/specialMenus.json'
 import type { SpecialMenu } from './types'
 
 const specialMenus = specialMenuData as SpecialMenu[]
-type Page = 'table' | 'compare' | 'simulate'
+type Page = 'table' | 'compare' | 'simulate' | 'predict'
 
 function getPageFromHash(): Page {
   if (window.location.hash === '#compare') return 'compare'
   if (window.location.hash === '#simulate') return 'simulate'
+  if (window.location.hash === '#predict') return 'predict'
   return 'table'
 }
 
@@ -52,6 +54,13 @@ function App() {
             >
               特訓シミュレーション
             </a>
+            <a
+              className={page === 'predict' ? 'active' : undefined}
+              href="#predict"
+              aria-current={page === 'predict' ? 'page' : undefined}
+            >
+              裏パラ予測
+            </a>
           </nav>
         </div>
       </header>
@@ -60,6 +69,7 @@ function App() {
         {page === 'table' && <SpecialMenuTable menus={specialMenus} />}
         {page === 'compare' && <SpecialMenuComparison menus={specialMenus} />}
         {page === 'simulate' && <TrainingSimulation menus={specialMenus} />}
+        {page === 'predict' && <HiddenParameterPrediction menus={specialMenus} />}
 
         <p className="data-note">
           スペシャルメニュー全132件を収録しています。{' '}

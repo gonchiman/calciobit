@@ -1208,6 +1208,289 @@ a {
   line-height: 1.5;
 }
 
+.prediction-page {
+  max-width: 1120px;
+}
+
+.prediction-heading {
+  margin-bottom: 14px;
+}
+
+.prediction-input-panel {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.9fr) minmax(380px, 1.1fr) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #aaa;
+  background: #fafafa;
+}
+
+.prediction-transition-fields,
+.prediction-training-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 8px;
+}
+
+.prediction-training-fields {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+}
+
+.prediction-arrow {
+  display: grid;
+  height: 34px;
+  place-items: center;
+  color: #666;
+  font-size: 18px;
+}
+
+.prediction-menu-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 12px;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+}
+
+.prediction-menu-summary > div {
+  display: grid;
+  min-height: 70px;
+  align-content: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border-right: 1px solid #ccc;
+}
+
+.prediction-menu-summary > div:last-child {
+  border-right: 0;
+}
+
+.prediction-menu-summary span,
+.prediction-menu-summary small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.prediction-menu-summary strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.prediction-message {
+  display: grid;
+  min-height: 180px;
+  place-content: center;
+  gap: 5px;
+  border-bottom: 1px solid #bbb;
+  color: var(--muted);
+  text-align: center;
+}
+
+.prediction-message strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.prediction-message span {
+  font-size: 12px;
+}
+
+.prediction-output {
+  margin-top: 18px;
+}
+
+.prediction-output-heading {
+  align-items: center;
+}
+
+.prediction-output-heading h3 {
+  margin-bottom: 2px;
+}
+
+.prediction-output-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.prediction-confidence {
+  padding: 4px 9px;
+  border: 1px solid #999;
+  background: #f7f7f7;
+  color: #444;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.prediction-confidence.high {
+  border-color: #79a783;
+  background: #edf6ef;
+  color: #286437;
+}
+
+.prediction-confidence.low {
+  border-color: #c59d68;
+  background: #fff7e9;
+  color: #7b4d12;
+}
+
+.prediction-warning {
+  margin-bottom: 10px;
+  padding: 9px 11px;
+  border: 1px solid #d7b57d;
+  background: #fff8eb;
+  color: #704b16;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.prediction-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 16px;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+}
+
+.prediction-summary-grid > div {
+  display: grid;
+  min-height: 62px;
+  align-content: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border-right: 1px solid #ccc;
+}
+
+.prediction-summary-grid > div:last-child {
+  border-right: 0;
+}
+
+.prediction-summary-grid span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.prediction-summary-grid strong {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prediction-tables {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: start;
+  gap: 18px;
+}
+
+.prediction-table-group {
+  min-width: 0;
+}
+
+.prediction-table-group h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.prediction-table-shell {
+  overflow-x: auto;
+  border-top: 1px solid #999;
+}
+
+.prediction-table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prediction-table th,
+.prediction-table td {
+  height: 38px;
+  padding: 5px 8px;
+  border-bottom: 1px solid #ddd;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.prediction-table thead th {
+  background: #f3f3f3;
+  color: #555;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.prediction-table th:first-child {
+  text-align: left;
+}
+
+.prediction-table tbody th {
+  color: #444;
+  font-weight: 600;
+}
+
+.prediction-table td {
+  font-weight: 700;
+}
+
+.prediction-table .prediction-value {
+  color: #222;
+  font-size: 14px;
+}
+
+.prediction-table .prediction-range {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.prediction-table .positive {
+  color: var(--positive);
+}
+
+.prediction-table .negative {
+  color: var(--negative);
+}
+
+.prediction-table .zero {
+  color: #888;
+}
+
+.prediction-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.prediction-method {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.prediction-method summary {
+  padding: 9px 2px;
+  color: #444;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.prediction-method > div {
+  padding: 0 2px 8px;
+}
+
+.prediction-method p {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
 .training-detail-backdrop {
   position: fixed;
   z-index: 1000;
@@ -1396,6 +1679,14 @@ a {
   .simulation-totals-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .prediction-input-panel {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .prediction-input-panel .reset-button {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1498,6 +1789,19 @@ a {
   }
 
   .recommendation-list {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-input-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-input-panel .reset-button {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .prediction-tables {
     grid-template-columns: 1fr;
   }
 
@@ -1626,6 +1930,35 @@ a {
 
   .training-detail-metrics {
     padding: 12px;
+  }
+
+  .prediction-transition-fields,
+  .prediction-training-fields,
+  .prediction-menu-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-arrow {
+    height: 18px;
+    transform: rotate(90deg);
+  }
+
+  .prediction-menu-summary > div {
+    border-right: 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .prediction-menu-summary > div:last-child {
+    border-bottom: 0;
+  }
+
+  .prediction-summary-grid > div {
+    padding-right: 7px;
+    padding-left: 7px;
+  }
+
+  .prediction-summary-grid strong {
+    font-size: 14px;
   }
 
   .data-note {
