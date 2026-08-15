@@ -354,7 +354,7 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
         </div>
       </div>
 
-      <details className="type-reference">
+      <details className="type-reference simulation-disclosure">
         <summary>タイプ変更表</summary>
         <div className="type-reference-table-shell">
           <table className="type-reference-table">
@@ -404,14 +404,11 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
         </p>
       </details>
 
-      <section
-        className="simulation-recommendations"
-        aria-labelledby="recommendation-heading"
-      >
-        <div className="subsection-heading">
-          <h3 id="recommendation-heading">おすすめ特訓</h3>
-          {targetType && <span>{recommendedMenus.length}件・接近量順</span>}
-        </div>
+      <details className="simulation-recommendations simulation-disclosure">
+        <summary>
+          <span>おすすめ特訓</span>
+          {targetType && <small>{recommendedMenus.length}件・接近量順</small>}
+        </summary>
 
         {!targetType ? (
           <div className="recommendation-empty">目標タイプ未選択</div>
@@ -447,17 +444,16 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
         ) : (
           <div className="recommendation-empty">目標に近づく特訓なし</div>
         )}
-      </section>
+      </details>
 
       <div className="simulation-selection-grid">
-        <section
-          className="simulation-picker"
-          aria-labelledby="simulation-picker-heading"
-        >
-          <div className="subsection-heading">
-            <h3 id="simulation-picker-heading">特訓を追加</h3>
-            <span>{filteredMenus.length}件</span>
-          </div>
+        <details className="simulation-picker simulation-disclosure">
+          <summary>
+            <span>特訓を追加</span>
+            <small>{filteredMenus.length}件</small>
+          </summary>
+
+          <div className="simulation-picker-content">
 
           <div className="comparison-filters">
             <label className="field">
@@ -592,7 +588,8 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
               </div>
             )}
           </div>
-        </section>
+          </div>
+        </details>
 
         <section
           className="simulation-plan"
