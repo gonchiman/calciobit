@@ -123,7 +123,12 @@ a {
 
 .filter-panel {
   display: grid;
-  grid-template-columns: minmax(240px, 1.6fr) minmax(170px, 0.8fr) minmax(150px, 0.7fr) auto;
+  grid-template-columns:
+    minmax(220px, 1.4fr)
+    minmax(150px, 0.7fr)
+    minmax(170px, 0.8fr)
+    minmax(130px, 0.6fr)
+    auto;
   align-items: end;
   gap: 8px;
 }
@@ -486,6 +491,16 @@ a {
 .comparison-table thead button:hover {
   background: #e6e6e6;
   color: #111;
+}
+
+.excluded-card-filters > span {
+  border-color: #cba9a6;
+  background: #fff5f4;
+  color: #7f231c;
+}
+
+.excluded-card-filters button {
+  color: #8f3028;
 }
 
 .menu-results {

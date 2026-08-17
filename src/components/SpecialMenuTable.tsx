@@ -135,6 +135,7 @@ type SpecialMenuTableProps = {
 export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
   const [query, setQuery] = useState('')
   const [selectedCard, setSelectedCard] = useState('')
+  const [excludedCards, setExcludedCards] = useState<string[]>([])
   const [fatigueLimit, setFatigueLimit] = useState('')
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'total', desc: true },
@@ -160,11 +161,19 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
           card.toLocaleLowerCase('ja').includes(normalizedQuery),
         )
       const matchesCard = !selectedCard || menu.cards.includes(selectedCard)
+      const matchesExcludedCards = excludedCards.every(
+        (card) => !menu.cards.includes(card),
+      )
       const matchesFatigue = maxFatigue === null || menu.fatigue <= maxFatigue
 
-      return matchesQuery && matchesCard && matchesFatigue
+      return (
+        matchesQuery &&
+        matchesCard &&
+        matchesExcludedCards &&
+        matchesFatigue
+      )
     })
-  }, [fatigueLimit, menus, query, selectedCard])
+  }, [excludedCards, fatigueLimit, menus, query, selectedCard])
 
   const table = useReactTable({
     data: filteredMenus,
@@ -178,8 +187,26 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
   const reset = () => {
     setQuery('')
     setSelectedCard('')
+    setExcludedCards([])
     setFatigueLimit('')
     setSorting([{ id: 'total', desc: true }])
+  }
+
+  const selectIncludedCard = (card: string) => {
+    setSelectedCard(card)
+
+    if (card) {
+      setExcludedCards((current) =>
+        current.filter((excludedCard) => excludedCard !== card),
+      )
+    }
+  }
+
+  const addExcludedCard = (card: string) => {
+    if (!card || excludedCards.includes(card)) return
+
+    setExcludedCards((current) => [...current, card])
+    if (selectedCard === card) setSelectedCard('')
   }
 
   return (
@@ -213,11 +240,30 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
           <span>含まれる課題</span>
           <select
             value={selectedCard}
-            onChange={(event) => setSelectedCard(event.target.value)}
+            onChange={(event) => selectIncludedCard(event.target.value)}
           >
             <option value="">すべての課題</option>
             {cardOptions.map((card) => (
               <option key={card} value={card}>
+                {card}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
+          <span>含まない課題（複数可）</span>
+          <select
+            value=""
+            onChange={(event) => addExcludedCard(event.target.value)}
+          >
+            <option value="">除外する課題を追加</option>
+            {cardOptions.map((card) => (
+              <option
+                key={card}
+                value={card}
+                disabled={excludedCards.includes(card)}
+              >
                 {card}
               </option>
             ))}
@@ -242,6 +288,30 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
           条件をリセット
         </button>
       </div>
+
+      {excludedCards.length > 0 && (
+        <div
+          className="selected-card-filters excluded-card-filters"
+          aria-label="除外中の課題"
+        >
+          {excludedCards.map((card) => (
+            <span key={card}>
+              除外: {card}
+              <button
+                type="button"
+                onClick={() =>
+                  setExcludedCards((current) =>
+                    current.filter((excludedCard) => excludedCard !== card),
+                  )
+                }
+                aria-label={`${card}の除外を解除`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="sort-guide">
         <span className="guide-mark">↕</span>
