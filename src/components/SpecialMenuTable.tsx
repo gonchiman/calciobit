@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   createColumnHelper,
   flexRender,
@@ -193,6 +193,79 @@ const cardCategories: readonly CardCategory[] = [
   },
 ]
 
+type NumericParameterKey = Exclude<keyof SpecialMenu, 'name' | 'cards'>
+
+type ParameterOptionGroup = {
+  label: string
+  options: readonly {
+    key: NumericParameterKey
+    label: string
+  }[]
+}
+
+const parameterOptionGroups: readonly ParameterOptionGroup[] = [
+  {
+    label: '能力値・基本値',
+    options: [
+      { key: 'kick', label: 'キック' },
+      { key: 'speed', label: 'スピード' },
+      { key: 'stamina', label: 'スタミナ' },
+      { key: 'technique', label: 'テクニック' },
+      { key: 'physical', label: 'フィジカル' },
+      { key: 'jump', label: 'ジャンプ' },
+      { key: 'mental', label: 'メンタル' },
+      { key: 'total', label: '合計' },
+      { key: 'fatigue', label: '疲労' },
+    ],
+  },
+  {
+    label: '攻撃系ポジショニング',
+    options: [
+      { key: 'offenseQuality', label: '攻撃クオリティ' },
+      { key: 'support', label: 'サポート' },
+      { key: 'triangle', label: 'トライアングル' },
+      { key: 'loseMark', label: 'マークを外す' },
+      { key: 'overlap', label: 'オーバーラップ' },
+      { key: 'diagonalRun', label: 'ダイアゴナルラン' },
+      { key: 'spaceRun', label: 'スペースに走り込む' },
+      { key: 'goalFront', label: 'ゴール前待機' },
+    ],
+  },
+  {
+    label: '守備系ポジショニング',
+    options: [
+      { key: 'defenseQuality', label: '守備クオリティ' },
+      { key: 'zoneMarking', label: 'ゾーンマーキング' },
+      { key: 'manMarking', label: 'マンツーマン' },
+      { key: 'pressing', label: 'プレッシング' },
+      { key: 'shootCut', label: 'シュートカット' },
+      { key: 'intercept', label: 'インターセプト' },
+    ],
+  },
+]
+
+type ParameterConstraint = {
+  id: number
+  parameter: NumericParameterKey
+  minimum: string
+  maximum: string
+}
+
+function getConstraintBounds(constraint: ParameterConstraint) {
+  const minimum =
+    constraint.minimum === '' ? null : Number(constraint.minimum)
+  const maximum =
+    constraint.maximum === '' ? null : Number(constraint.maximum)
+  const hasValue = minimum !== null || maximum !== null
+  const isValid =
+    (!hasValue ||
+      ((minimum === null || Number.isFinite(minimum)) &&
+        (maximum === null || Number.isFinite(maximum)))) &&
+    (minimum === null || maximum === null || minimum <= maximum)
+
+  return { minimum, maximum, hasValue, isValid }
+}
+
 type SpecialMenuTableProps = {
   menus: SpecialMenu[]
 }
@@ -202,9 +275,13 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
   const [selectedCard, setSelectedCard] = useState('')
   const [excludedCards, setExcludedCards] = useState<string[]>([])
   const [fatigueLimit, setFatigueLimit] = useState('')
+  const [parameterConstraints, setParameterConstraints] = useState<
+    ParameterConstraint[]
+  >([])
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'total', desc: true },
   ])
+  const nextConstraintId = useRef(1)
 
   const cardOptions = useMemo(
     () =>
@@ -238,6 +315,17 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
     return groups.filter((category) => category.cards.length > 0)
   }, [cardOptions])
 
+  const activeParameterConstraintCount = parameterConstraints.filter(
+    (constraint) => {
+      const bounds = getConstraintBounds(constraint)
+      return bounds.hasValue && bounds.isValid
+    },
+  ).length
+
+  const hasInvalidParameterConstraint = parameterConstraints.some(
+    (constraint) => !getConstraintBounds(constraint).isValid,
+  )
+
   const filteredMenus = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('ja')
     const maxFatigue = fatigueLimit ? Number(fatigueLimit) : null
@@ -254,15 +342,37 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
         (card) => !menu.cards.includes(card),
       )
       const matchesFatigue = maxFatigue === null || menu.fatigue <= maxFatigue
+      const matchesParameterConstraints = parameterConstraints.every(
+        (constraint) => {
+          const { minimum, maximum, hasValue, isValid } =
+            getConstraintBounds(constraint)
+
+          if (!hasValue || !isValid) return true
+
+          const value = menu[constraint.parameter]
+          return (
+            (minimum === null || value >= minimum) &&
+            (maximum === null || value <= maximum)
+          )
+        },
+      )
 
       return (
         matchesQuery &&
         matchesCard &&
         matchesExcludedCards &&
-        matchesFatigue
+        matchesFatigue &&
+        matchesParameterConstraints
       )
     })
-  }, [excludedCards, fatigueLimit, menus, query, selectedCard])
+  }, [
+    excludedCards,
+    fatigueLimit,
+    menus,
+    parameterConstraints,
+    query,
+    selectedCard,
+  ])
 
   const table = useReactTable({
     data: filteredMenus,
@@ -278,6 +388,7 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
     setSelectedCard('')
     setExcludedCards([])
     setFatigueLimit('')
+    setParameterConstraints([])
     setSorting([{ id: 'total', desc: true }])
   }
 
@@ -308,6 +419,32 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
     )
 
     if (selectedCard === card) setSelectedCard('')
+  }
+
+  const addParameterConstraint = () => {
+    const id = nextConstraintId.current
+    nextConstraintId.current += 1
+    setParameterConstraints((current) => [
+      ...current,
+      { id, parameter: 'kick', minimum: '', maximum: '' },
+    ])
+  }
+
+  const updateParameterConstraint = (
+    id: number,
+    updates: Partial<Omit<ParameterConstraint, 'id'>>,
+  ) => {
+    setParameterConstraints((current) =>
+      current.map((constraint) =>
+        constraint.id === id ? { ...constraint, ...updates } : constraint,
+      ),
+    )
+  }
+
+  const removeParameterConstraint = (id: number) => {
+    setParameterConstraints((current) =>
+      current.filter((constraint) => constraint.id !== id),
+    )
   }
 
   return (
@@ -448,6 +585,135 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
               </ul>
             </section>
           ))}
+        </div>
+      </details>
+
+      <details className="task-selector parameter-selector">
+        <summary className="task-selector-heading">
+          <div>
+            <h3>パラメーターの数値で絞り込む</h3>
+            <p>下限（以上）と上限（以下）を指定し、複数の制約を追加できます。</p>
+          </div>
+          <div className="task-selector-heading-side">
+            <div className="task-selection-summary" aria-live="polite">
+              <span>
+                有効な制約
+                <strong>{activeParameterConstraintCount}件</strong>
+              </span>
+              {hasInvalidParameterConstraint && (
+                <span className="parameter-constraint-warning">
+                  入力を確認
+                </span>
+              )}
+            </div>
+            <span className="task-selector-toggle" aria-hidden="true">
+              <span className="task-selector-toggle-open">開く</span>
+              <span className="task-selector-toggle-close">閉じる</span>
+            </span>
+          </div>
+        </summary>
+
+        <div className="parameter-constraint-content">
+          <div className="parameter-constraint-toolbar">
+            <p>すべての制約を満たすメニューだけを表示します。</p>
+            <button type="button" onClick={addParameterConstraint}>
+              ＋ 制約を追加
+            </button>
+          </div>
+
+          {parameterConstraints.length > 0 ? (
+            <div className="parameter-constraint-list">
+              {parameterConstraints.map((constraint, index) => {
+                const bounds = getConstraintBounds(constraint)
+                const isReversed =
+                  bounds.minimum !== null &&
+                  bounds.maximum !== null &&
+                  bounds.minimum > bounds.maximum
+
+                return (
+                  <div
+                    className={`parameter-constraint-row${
+                      bounds.isValid ? '' : ' invalid'
+                    }`}
+                    key={constraint.id}
+                  >
+                    <span className="parameter-constraint-number">
+                      {index + 1}
+                    </span>
+                    <label className="parameter-constraint-field parameter-select-field">
+                      <span>パラメーター</span>
+                      <select
+                        value={constraint.parameter}
+                        onChange={(event) =>
+                          updateParameterConstraint(constraint.id, {
+                            parameter: event.target
+                              .value as NumericParameterKey,
+                          })
+                        }
+                      >
+                        {parameterOptionGroups.map((group) => (
+                          <optgroup label={group.label} key={group.label}>
+                            {group.options.map((option) => (
+                              <option value={option.key} key={option.key}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="parameter-constraint-field">
+                      <span>以上</span>
+                      <input
+                        type="number"
+                        step="1"
+                        value={constraint.minimum}
+                        aria-invalid={!bounds.isValid}
+                        placeholder="指定なし"
+                        onChange={(event) =>
+                          updateParameterConstraint(constraint.id, {
+                            minimum: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <label className="parameter-constraint-field">
+                      <span>以下</span>
+                      <input
+                        type="number"
+                        step="1"
+                        value={constraint.maximum}
+                        aria-invalid={!bounds.isValid}
+                        placeholder="指定なし"
+                        onChange={(event) =>
+                          updateParameterConstraint(constraint.id, {
+                            maximum: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="remove-parameter-constraint"
+                      aria-label={`制約${index + 1}を削除`}
+                      onClick={() => removeParameterConstraint(constraint.id)}
+                    >
+                      削除
+                    </button>
+                    {isReversed && (
+                      <span className="parameter-constraint-error">
+                        「以上」は「以下」以下の値にしてください。
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="parameter-constraint-empty">
+              制約はまだありません。「制約を追加」から設定してください。
+            </p>
+          )}
         </div>
       </details>
 

@@ -676,6 +676,154 @@ a {
   color: #fff;
 }
 
+.parameter-selector {
+  margin-top: 8px;
+}
+
+.parameter-constraint-warning {
+  border-color: #c88782 !important;
+  background: #fff0ef !important;
+  color: #8f3028 !important;
+  font-weight: 700;
+}
+
+.parameter-constraint-content {
+  padding: 8px;
+}
+
+.parameter-constraint-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.parameter-constraint-toolbar p,
+.parameter-constraint-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.parameter-constraint-toolbar button {
+  min-height: 30px;
+  padding: 3px 10px;
+  border: 1px solid #777;
+  background: #333;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.parameter-constraint-toolbar button:hover {
+  background: #111;
+}
+
+.parameter-constraint-list {
+  display: grid;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.parameter-constraint-row {
+  display: grid;
+  grid-template-columns: 28px minmax(190px, 1fr) minmax(100px, 150px) minmax(100px, 150px) 52px;
+  align-items: end;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid #bbb;
+  background: #fafafa;
+}
+
+.parameter-constraint-row.invalid {
+  border-color: #c88782;
+  background: #fff7f6;
+}
+
+.parameter-constraint-number {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  align-self: center;
+  border-radius: 50%;
+  background: #555;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.parameter-constraint-field {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.parameter-constraint-field > span {
+  color: #555;
+  font-size: 10px;
+}
+
+.parameter-constraint-field select,
+.parameter-constraint-field input {
+  width: 100%;
+  height: 31px;
+  min-width: 0;
+  border: 1px solid #aaa;
+  border-radius: 0;
+  background: #fff;
+  color: #222;
+  font-size: 11px;
+}
+
+.parameter-constraint-field select {
+  padding: 0 25px 0 7px;
+}
+
+.parameter-constraint-field input {
+  padding: 0 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.parameter-constraint-field select:focus,
+.parameter-constraint-field input:focus {
+  border-color: #333;
+  outline: 1px solid #333;
+}
+
+.parameter-constraint-field input[aria-invalid='true'] {
+  border-color: #a63d35;
+}
+
+.remove-parameter-constraint {
+  height: 31px;
+  padding: 0 7px;
+  border: 1px solid #a66a65;
+  background: #fff;
+  color: #8f3028;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.remove-parameter-constraint:hover {
+  background: #fff0ef;
+}
+
+.parameter-constraint-error {
+  grid-column: 2 / -1;
+  color: #9b3129;
+  font-size: 10px;
+}
+
+.parameter-constraint-empty {
+  margin-top: 7px;
+  padding: 10px;
+  border: 1px dashed #bbb;
+  text-align: center;
+}
+
 .initial-filter-options button:hover {
   border-color: #555;
   background: #f3f3f3;
@@ -2302,6 +2450,22 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .parameter-constraint-row {
+    grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 52px;
+  }
+
+  .parameter-constraint-number {
+    grid-row: 1 / 3;
+  }
+
+  .parameter-select-field {
+    grid-column: 2 / -1;
+  }
+
+  .parameter-constraint-error {
+    grid-column: 2 / -1;
+  }
+
   .table-shell {
     min-height: 320px;
     max-height: 65vh;
@@ -2412,6 +2576,35 @@ a {
 
   .task-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .parameter-constraint-toolbar {
+    display: grid;
+  }
+
+  .parameter-constraint-toolbar button {
+    width: 100%;
+  }
+
+  .parameter-constraint-row {
+    grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .parameter-constraint-number {
+    grid-row: 1 / 4;
+  }
+
+  .parameter-select-field {
+    grid-column: 2 / -1;
+  }
+
+  .remove-parameter-constraint {
+    grid-column: 2 / -1;
+    width: 100%;
+  }
+
+  .parameter-constraint-error {
+    grid-column: 2 / -1;
   }
 
   .sort-guide {
