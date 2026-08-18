@@ -356,27 +356,33 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
         </button>
       </div>
 
-      <section className="task-selector" aria-labelledby="task-selector-heading">
-        <div className="task-selector-heading">
+      <details className="task-selector">
+        <summary className="task-selector-heading">
           <div>
             <h3 id="task-selector-heading">課題で絞り込む</h3>
             <p>「含む」は1件、「含まない」は複数件登録できます。</p>
           </div>
-          <div className="task-selection-summary" aria-live="polite">
-            <span>
-              含む
-              <strong>{selectedCard || '未登録'}</strong>
-            </span>
-            <span>
-              含まない
-              <strong>
-                {excludedCards.length > 0
-                  ? `${excludedCards.length}件`
-                  : '未登録'}
-              </strong>
+          <div className="task-selector-heading-side">
+            <div className="task-selection-summary" aria-live="polite">
+              <span>
+                含む
+                <strong>{selectedCard || '未登録'}</strong>
+              </span>
+              <span>
+                含まない
+                <strong>
+                  {excludedCards.length > 0
+                    ? `${excludedCards.length}件`
+                    : '未登録'}
+                </strong>
+              </span>
+            </div>
+            <span className="task-selector-toggle" aria-hidden="true">
+              <span className="task-selector-toggle-open">開く</span>
+              <span className="task-selector-toggle-close">閉じる</span>
             </span>
           </div>
-        </div>
+        </summary>
 
         <div className="task-category-list">
           {availableCardCategories.map((category) => (
@@ -443,7 +449,7 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
             </section>
           ))}
         </div>
-      </section>
+      </details>
 
       <div className="sort-guide">
         <span className="guide-mark">↕</span>
