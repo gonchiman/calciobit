@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from 'react'
+import { specialMenuReadings } from '../data/specialMenuReadings'
 import type { SpecialMenu } from '../types'
 import { TrainingDetailDialog } from './TrainingDetailDialog'
 
@@ -73,7 +74,8 @@ const kanaByInitialGroup: Record<Exclude<InitialGroup, 'all' | 'other'>, string>
 }
 
 function getInitialGroup(name: string): Exclude<InitialGroup, 'all'> {
-  const firstCharacter = name.trim().normalize('NFKC')[0]
+  const reading = specialMenuReadings[name] ?? name
+  const firstCharacter = reading.trim().normalize('NFKC')[0]
 
   if (!firstCharacter) return 'other'
 
