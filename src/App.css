@@ -542,8 +542,8 @@ a {
 
 .task-category-list {
   display: grid;
-  gap: 12px;
-  padding: 10px;
+  gap: 8px;
+  padding: 8px;
 }
 
 .task-category {
@@ -577,9 +577,9 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 5px;
-  padding: 3px 0 3px 8px;
-  border-left: 5px solid var(--category-color);
+  margin-bottom: 3px;
+  padding: 1px 0 1px 6px;
+  border-left: 4px solid var(--category-color);
 }
 
 .task-category-heading h4 {
@@ -596,8 +596,8 @@ a {
 
 .task-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -606,22 +606,21 @@ a {
 .task-filter-card {
   display: grid;
   min-width: 0;
-  min-height: 72px;
-  grid-template-rows: 1fr auto;
-  gap: 6px;
-  padding: 7px;
+  min-height: 40px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 5px;
   border: 1px solid #bbb;
-  border-top: 3px solid var(--category-color);
+  border-left: 3px solid var(--category-color);
   background: #fff;
 }
 
 .task-filter-card > strong {
-  overflow: hidden;
   color: #222;
-  font-size: 12px;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .task-filter-card.included,
@@ -639,18 +638,18 @@ a {
 
 .task-filter-card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
+  grid-template-columns: 42px 60px;
+  gap: 3px;
 }
 
 .task-filter-card-actions button {
   min-width: 0;
-  height: 26px;
-  padding: 0 4px;
+  height: 24px;
+  padding: 0 3px;
   border: 1px solid #aaa;
   background: #fff;
   color: #444;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -2300,7 +2299,7 @@ a {
   }
 
   .task-card-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .table-shell {
@@ -2408,11 +2407,11 @@ a {
   }
 
   .task-category-list {
-    padding: 8px;
+    padding: 6px;
   }
 
   .task-card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .sort-guide {
