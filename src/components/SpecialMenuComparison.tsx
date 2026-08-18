@@ -73,20 +73,24 @@ const kanaByInitialGroup: Record<Exclude<InitialGroup, 'all' | 'other'>, string>
   wa: 'ゎわゐゑをん',
 }
 
+function getMenuReading(name: string) {
+  const reading = (specialMenuReadings[name] ?? name).trim().normalize('NFKC')
+
+  return Array.from(reading, (character) => {
+    const codePoint = character.codePointAt(0)
+    return codePoint && codePoint >= 0x30a1 && codePoint <= 0x30f6
+      ? String.fromCodePoint(codePoint - 0x60)
+      : character
+  }).join('')
+}
+
 function getInitialGroup(name: string): Exclude<InitialGroup, 'all'> {
-  const reading = specialMenuReadings[name] ?? name
-  const firstCharacter = reading.trim().normalize('NFKC')[0]
+  const firstCharacter = getMenuReading(name)[0]
 
   if (!firstCharacter) return 'other'
 
-  const codePoint = firstCharacter.codePointAt(0)
-  const normalizedCharacter =
-    codePoint && codePoint >= 0x30a1 && codePoint <= 0x30f6
-      ? String.fromCodePoint(codePoint - 0x60)
-      : firstCharacter
-
   const matchedGroup = Object.entries(kanaByInitialGroup).find(([, kana]) =>
-    kana.includes(normalizedCharacter),
+    kana.includes(firstCharacter),
   )
 
   return (matchedGroup?.[0] as Exclude<InitialGroup, 'all' | 'other'>) ?? 'other'
@@ -159,13 +163,31 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
   const filteredMenus = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('ja')
 
-    return menus.filter(
+    const matches = menus.filter(
       (menu) =>
         (initialGroup === 'all' || getInitialGroup(menu.name) === initialGroup) &&
         (!normalizedQuery ||
           menu.name.toLocaleLowerCase('ja').includes(normalizedQuery)) &&
         selectedCards.every((card) => menu.cards.includes(card)),
     )
+
+    if (initialGroup === 'all') return matches
+
+    return [...matches].sort((firstMenu, secondMenu) => {
+      const readingOrder = getMenuReading(firstMenu.name).localeCompare(
+        getMenuReading(secondMenu.name),
+        'ja',
+        { sensitivity: 'base', numeric: true },
+      )
+
+      return (
+        readingOrder ||
+        firstMenu.name.localeCompare(secondMenu.name, 'ja', {
+          sensitivity: 'base',
+          numeric: true,
+        })
+      )
+    })
   }, [initialGroup, menus, query, selectedCards])
 
   const selectedMenus = useMemo(
