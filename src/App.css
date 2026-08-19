@@ -955,6 +955,11 @@ a {
   outline-offset: 3px;
 }
 
+.menu-table-name-button {
+  color: inherit;
+  font: inherit;
+}
+
 .menu-result-total {
   color: #444;
   font-size: 12px;

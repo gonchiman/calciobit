@@ -8,6 +8,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import type { SpecialMenu } from '../types'
+import { TrainingDetailDialog } from './TrainingDetailDialog'
 
 const columnHelper = createColumnHelper<SpecialMenu>()
 
@@ -16,10 +17,21 @@ function NumberCell({ value }: { value: number }) {
   return <span className={`number-value ${tone}`}>{value}</span>
 }
 
-const columns = [
+function createColumns(onOpenDetail: (menu: SpecialMenu) => void) {
+  return [
   columnHelper.accessor('name', {
     header: 'メニュー名',
-    cell: (info) => <strong>{info.getValue()}</strong>,
+    cell: (info) => (
+      <button
+        type="button"
+        className="menu-table-name-button training-info-trigger"
+        onClick={() => onOpenDetail(info.row.original)}
+        aria-label={`${info.getValue()}の情報を表示`}
+        title="特訓情報を表示"
+      >
+        <strong>{info.getValue()}</strong>
+      </button>
+    ),
   }),
   columnHelper.accessor('cards', {
     header: '必要な課題',
@@ -126,7 +138,8 @@ const columns = [
     header: 'インターセプト',
     cell: (info) => <NumberCell value={info.getValue()} />,
   }),
-]
+  ]
+}
 
 type CardCategory = {
   id: string
@@ -278,10 +291,13 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
   const [parameterConstraints, setParameterConstraints] = useState<
     ParameterConstraint[]
   >([])
+  const [detailMenu, setDetailMenu] = useState<SpecialMenu | null>(null)
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'total', desc: true },
   ])
   const nextConstraintId = useRef(1)
+
+  const columns = useMemo(() => createColumns(setDetailMenu), [])
 
   const cardOptions = useMemo(
     () =>
@@ -800,6 +816,13 @@ export function SpecialMenuTable({ menus }: SpecialMenuTableProps) {
           </div>
         )}
       </div>
+
+      {detailMenu && (
+        <TrainingDetailDialog
+          menu={detailMenu}
+          onClose={() => setDetailMenu(null)}
+        />
+      )}
     </section>
   )
 }
