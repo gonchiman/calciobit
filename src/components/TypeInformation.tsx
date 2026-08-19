@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   getTypeReferenceValues,
   playerTypes,
@@ -6,6 +6,12 @@ import {
   type PlayerType,
   type PositioningKey,
 } from '../typeEstimation'
+import {
+  defaultTypeReferenceSort,
+  sortTypeReferences,
+  toggleTypeReferenceSort,
+  type TypeReferenceSort,
+} from '../typeReferenceSorting'
 
 const offenseKeys: PositioningKey[] = [
   'support',
@@ -235,6 +241,13 @@ function RadarChart({ id, title, keys, selectedTypes }: RadarChartProps) {
 
 export function TypeInformation() {
   const [selectedTypes, setSelectedTypes] = useState<PlayerType[]>(['バランス'])
+  const [tableSort, setTableSort] = useState<TypeReferenceSort>(
+    defaultTypeReferenceSort,
+  )
+  const sortedTableTypes = useMemo(
+    () => sortTypeReferences(tableSort),
+    [tableSort],
+  )
 
   const toggleType = (type: PlayerType) => {
     setSelectedTypes((current) =>
@@ -342,16 +355,60 @@ export function TypeInformation() {
           <table className="type-reference-table type-information-table">
             <thead>
               <tr>
-                <th scope="col">タイプ</th>
+                <th scope="col">
+                  <button
+                    type="button"
+                    className="type-reference-sort-button"
+                    aria-label="タイプを初期順に戻す"
+                    onClick={() => setTableSort(defaultTypeReferenceSort)}
+                  >
+                    <span>タイプ</span>
+                    <span className="sort-indicator" aria-hidden="true">
+                      ↺
+                    </span>
+                  </button>
+                </th>
                 {positioningKeys.map((key) => (
-                  <th scope="col" key={key}>
-                    {positioningLabels[key]}
+                  <th
+                    scope="col"
+                    key={key}
+                    aria-sort={
+                      tableSort.key === key
+                        ? tableSort.direction === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : undefined
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="type-reference-sort-button"
+                      aria-label={`${positioningLabels[key]}を${
+                        tableSort.key === key && tableSort.direction === 'desc'
+                          ? '小さい順'
+                          : '大きい順'
+                      }に並べ替える`}
+                      onClick={() =>
+                        setTableSort((current) =>
+                          toggleTypeReferenceSort(current, key),
+                        )
+                      }
+                    >
+                      <span>{positioningLabels[key]}</span>
+                      <span className="sort-indicator" aria-hidden="true">
+                        {tableSort.key === key
+                          ? tableSort.direction === 'asc'
+                            ? '↑'
+                            : '↓'
+                          : '↕'}
+                      </span>
+                    </button>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {playerTypes.map((type) => {
+              {sortedTableTypes.map((type) => {
                 const values = getTypeReferenceValues(type)
                 const isSelected = selectedTypes.includes(type)
 

@@ -1260,6 +1260,45 @@ a {
   font-weight: 700;
 }
 
+.type-reference-table thead th[aria-sort] {
+  background: #e4e8e5;
+  color: #1d2921;
+}
+
+.type-reference-sort-button {
+  display: inline-flex;
+  width: 100%;
+  min-height: 24px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.type-reference-sort-button:hover {
+  color: #111;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.type-reference-sort-button:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #315f3e;
+  outline-offset: 2px;
+}
+
+.type-reference-sort-button .sort-indicator {
+  min-width: 10px;
+  color: #657068;
+  font-size: 10px;
+  text-align: center;
+}
+
 .type-reference-table th:first-child {
   position: sticky;
   left: 0;
@@ -1272,6 +1311,10 @@ a {
 .type-reference-table thead th:first-child {
   z-index: 3;
   background: #f1f1f1;
+}
+
+.type-reference-table thead th:first-child .type-reference-sort-button {
+  justify-content: flex-start;
 }
 
 .type-reference-table tbody tr.active-type th,

@@ -9,6 +9,12 @@ import {
   type PositioningKey,
 } from '../typeEstimation'
 import type { SpecialMenu } from '../types'
+import {
+  defaultTypeReferenceSort,
+  sortTypeReferences,
+  toggleTypeReferenceSort,
+  type TypeReferenceSort,
+} from '../typeReferenceSorting'
 import { TrainingDetailDialog } from './TrainingDetailDialog'
 
 const numericMetricKeys = [
@@ -156,6 +162,13 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
   const [currentType, setCurrentType] = useState<PlayerType>('バランス')
   const [targetType, setTargetType] = useState<PlayerType | ''>('')
   const [detailMenu, setDetailMenu] = useState<SpecialMenu | null>(null)
+  const [typeTableSort, setTypeTableSort] = useState<TypeReferenceSort>(
+    defaultTypeReferenceSort,
+  )
+  const sortedTypeReferences = useMemo(
+    () => sortTypeReferences(typeTableSort),
+    [typeTableSort],
+  )
 
   const cardOptions = useMemo(
     () =>
@@ -362,16 +375,61 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
           <table className="type-reference-table">
             <thead>
               <tr>
-                <th scope="col">タイプ</th>
+                <th scope="col">
+                  <button
+                    type="button"
+                    className="type-reference-sort-button"
+                    aria-label="タイプを初期順に戻す"
+                    onClick={() => setTypeTableSort(defaultTypeReferenceSort)}
+                  >
+                    <span>タイプ</span>
+                    <span className="sort-indicator" aria-hidden="true">
+                      ↺
+                    </span>
+                  </button>
+                </th>
                 {positioningKeys.map((key) => (
-                  <th scope="col" key={key}>
-                    {positioningLabels[key]}
+                  <th
+                    scope="col"
+                    key={key}
+                    aria-sort={
+                      typeTableSort.key === key
+                        ? typeTableSort.direction === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : undefined
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="type-reference-sort-button"
+                      aria-label={`${positioningLabels[key]}を${
+                        typeTableSort.key === key &&
+                        typeTableSort.direction === 'desc'
+                          ? '小さい順'
+                          : '大きい順'
+                      }に並べ替える`}
+                      onClick={() =>
+                        setTypeTableSort((current) =>
+                          toggleTypeReferenceSort(current, key),
+                        )
+                      }
+                    >
+                      <span>{positioningLabels[key]}</span>
+                      <span className="sort-indicator" aria-hidden="true">
+                        {typeTableSort.key === key
+                          ? typeTableSort.direction === 'asc'
+                            ? '↑'
+                            : '↓'
+                          : '↕'}
+                      </span>
+                    </button>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {playerTypes.map((type) => {
+              {sortedTypeReferences.map((type) => {
                 const referenceValues = getTypeReferenceValues(type)
                 const isCurrent = type === currentType
                 const isTarget = type === targetType
