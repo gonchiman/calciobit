@@ -19,8 +19,8 @@ export type TypeVectorEntry = {
 export type TypeVectorResult = {
   entries: TypeVectorEntry[]
   rankedEntries: TypeVectorEntry[]
-  primaryType: PlayerType | null
-  secondaryType: PlayerType | null
+  primaryTypes: PlayerType[]
+  secondaryTypes: PlayerType[]
   isComposite: boolean
   tendencyLabel: string
   totalChange: number
@@ -47,14 +47,25 @@ function getDistance(
   )
 }
 
-export function calculateTypeVector(gains: PositioningGains): TypeVectorResult {
-  const beforeValues = Object.fromEntries(
-    positioningKeys.map((key) => [key, BASE_POSITIONING_VALUE]),
-  ) as Record<PositioningKey, number>
+function getBasePositioningValues(baseType: PlayerType) {
+  if (baseType === 'バランス') {
+    return Object.fromEntries(
+      positioningKeys.map((key) => [key, BASE_POSITIONING_VALUE]),
+    ) as Record<PositioningKey, number>
+  }
+
+  return getTypeReferenceValues(baseType)
+}
+
+export function calculateTypeVector(
+  gains: PositioningGains,
+  baseType: PlayerType = 'バランス',
+): TypeVectorResult {
+  const beforeValues = getBasePositioningValues(baseType)
   const afterValues = Object.fromEntries(
     positioningKeys.map((key) => [
       key,
-      clampPositioningValue(BASE_POSITIONING_VALUE + gains[key]),
+      clampPositioningValue(beforeValues[key] + gains[key]),
     ]),
   ) as Record<PositioningKey, number>
 
@@ -69,26 +80,44 @@ export function calculateTypeVector(gains: PositioningGains): TypeVectorResult {
     (sum, key) => sum + Math.abs(gains[key]),
     0,
   )
-  const primaryType =
-    rankedEntries[0].value > 0 ? rankedEntries[0].type : null
-  const secondaryType =
-    primaryType && rankedEntries[1].value > 0 ? rankedEntries[1].type : null
-  const isComposite = Boolean(
-    primaryType &&
-      secondaryType &&
-      rankedEntries[0].value - rankedEntries[1].value < totalChange * 0.1,
-  )
-  const tendencyLabel = primaryType
-    ? isComposite && secondaryType
-      ? `${primaryType} / ${secondaryType}`
-      : primaryType
-    : '明確なタイプ傾向なし'
+  const highestValue = rankedEntries[0].value
+  const primaryTypes =
+    highestValue > 0
+      ? rankedEntries
+          .filter((entry) => entry.value === highestValue)
+          .map((entry) => entry.type)
+      : []
+  const secondaryValue = rankedEntries.find(
+    (entry) => entry.value > 0 && entry.value < highestValue,
+  )?.value
+  const secondaryTypes = secondaryValue
+    ? rankedEntries
+        .filter((entry) => entry.value === secondaryValue)
+        .map((entry) => entry.type)
+    : []
+  const compositeThreshold = totalChange * 0.1
+  const tendencyTypes =
+    highestValue > 0
+      ? rankedEntries
+          .filter(
+            (entry) =>
+              entry.value > 0 &&
+              (entry.value === highestValue ||
+                highestValue - entry.value < compositeThreshold),
+          )
+          .map((entry) => entry.type)
+      : []
+  const isComposite = tendencyTypes.length > 1
+  const tendencyLabel =
+    tendencyTypes.length > 0
+      ? tendencyTypes.join(' / ')
+      : '明確なタイプ傾向なし'
 
   return {
     entries,
     rankedEntries,
-    primaryType,
-    secondaryType,
+    primaryTypes,
+    secondaryTypes,
     isComposite,
     tendencyLabel,
     totalChange,

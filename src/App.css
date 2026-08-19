@@ -2371,7 +2371,8 @@ a {
 }
 
 .training-type-vector-heading p,
-.training-type-vector-heading > span {
+.training-type-vector-controls small,
+.training-type-vector-controls label > span {
   color: var(--muted);
   font-size: 10px;
 }
@@ -2380,7 +2381,35 @@ a {
   margin-top: 2px;
 }
 
-.training-type-vector-heading > span {
+.training-type-vector-controls {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.training-type-vector-controls label {
+  display: grid;
+  gap: 2px;
+}
+
+.training-type-vector-controls select {
+  min-width: 140px;
+  height: 30px;
+  border: 1px solid #999;
+  border-radius: 0;
+  background: #fff;
+  color: #222;
+  font-size: 11px;
+}
+
+.training-type-vector-controls select:focus {
+  border-color: #333;
+  outline: 1px solid #333;
+}
+
+.training-type-vector-controls small {
+  padding-bottom: 7px;
   white-space: nowrap;
 }
 
@@ -2881,7 +2910,20 @@ a {
   }
 
   .training-type-vector-heading {
+    display: grid;
     align-items: flex-start;
+  }
+
+  .training-type-vector-controls {
+    justify-content: space-between;
+  }
+
+  .training-type-vector-controls label {
+    min-width: min(220px, 70%);
+  }
+
+  .training-type-vector-controls select {
+    width: 100%;
   }
 
   .training-type-vector-grid {

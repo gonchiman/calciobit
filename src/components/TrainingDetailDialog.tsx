@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { playerTypes, type PlayerType } from '../typeEstimation'
 import { calculateTypeVector } from '../typeVector'
 import type { SpecialMenu } from '../types'
 
@@ -86,7 +87,8 @@ export function TrainingDetailDialog({
   menu,
   onClose,
 }: TrainingDetailDialogProps) {
-  const typeVector = calculateTypeVector(menu)
+  const [baseType, setBaseType] = useState<PlayerType>('バランス')
+  const typeVector = calculateTypeVector(menu, baseType)
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -193,9 +195,30 @@ export function TrainingDetailDialog({
           <div className="training-type-vector-heading">
             <div>
               <h3 id="training-type-vector-heading">タイプベクトル</h3>
-              <p>初期裏パラをすべて30とした、特訓単体のタイプ傾向です。</p>
+              <p>
+                {baseType === 'バランス'
+                  ? '初期裏パラをすべて30とした、特訓単体のタイプ傾向です。'
+                  : `${baseType}の基準値を特訓前としたタイプ傾向です。`}
+              </p>
             </div>
-            <span>距離改善量方式</span>
+            <div className="training-type-vector-controls">
+              <label>
+                <span>前提タイプ</span>
+                <select
+                  value={baseType}
+                  onChange={(event) =>
+                    setBaseType(event.target.value as PlayerType)
+                  }
+                >
+                  {playerTypes.map((type) => (
+                    <option value={type} key={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <small>距離改善量方式</small>
+            </div>
           </div>
 
           <div className="training-type-vector-summary">
@@ -204,12 +227,28 @@ export function TrainingDetailDialog({
               <strong>{typeVector.tendencyLabel}</strong>
             </div>
             <div>
-              <span>主タイプ</span>
-              <strong>{typeVector.primaryType ?? 'なし'}</strong>
+              <span>
+                {typeVector.primaryTypes.length > 1
+                  ? '主タイプ（同率）'
+                  : '主タイプ'}
+              </span>
+              <strong>
+                {typeVector.primaryTypes.length > 0
+                  ? typeVector.primaryTypes.join(' / ')
+                  : 'なし'}
+              </strong>
             </div>
             <div>
-              <span>副タイプ</span>
-              <strong>{typeVector.secondaryType ?? 'なし'}</strong>
+              <span>
+                {typeVector.secondaryTypes.length > 1
+                  ? '副タイプ（同率）'
+                  : '副タイプ'}
+              </span>
+              <strong>
+                {typeVector.secondaryTypes.length > 0
+                  ? typeVector.secondaryTypes.join(' / ')
+                  : 'なし'}
+              </strong>
             </div>
             <div>
               <span>総変化量</span>
@@ -219,8 +258,8 @@ export function TrainingDetailDialog({
 
           <div className="training-type-vector-grid">
             {typeVector.entries.map((entry) => {
-              const isPrimary = entry.type === typeVector.primaryType
-              const isSecondary = entry.type === typeVector.secondaryType
+              const isPrimary = typeVector.primaryTypes.includes(entry.type)
+              const isSecondary = typeVector.secondaryTypes.includes(entry.type)
 
               return (
                 <div
