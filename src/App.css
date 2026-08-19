@@ -1839,6 +1839,206 @@ a {
   max-height: 380px;
 }
 
+.simulation-radar-section {
+  margin-bottom: 18px;
+}
+
+.simulation-progression-section {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.simulation-progression-section .subsection-heading {
+  align-items: end;
+}
+
+.simulation-progression-section .subsection-heading p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.simulation-repeat-field {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  color: #444;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.simulation-repeat-field input {
+  width: 70px;
+  height: 32px;
+  padding: 4px 7px;
+  border: 1px solid #999;
+  background: #fff;
+  color: #222;
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.simulation-repeat-field small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.simulation-selected-menu {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  min-height: 58px;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 9px;
+  border: 1px solid #aaa;
+  border-bottom: 0;
+  background: #f7f7f7;
+}
+
+.simulation-selected-menu-name {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.simulation-selected-menu-name strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.simulation-selected-menu-name span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.simulation-target-result {
+  color: #555;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.simulation-target-result strong {
+  margin-left: 4px;
+  color: var(--positive);
+  font-size: 14px;
+}
+
+.simulation-progression-table-shell {
+  max-height: 560px;
+  overflow: auto;
+  border: 1px solid #aaa;
+  background: #fff;
+}
+
+.simulation-progression-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.simulation-progression-table th,
+.simulation-progression-table td {
+  height: 34px;
+  padding: 5px 9px;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.simulation-progression-table thead th {
+  position: sticky;
+  z-index: 3;
+  min-width: 92px;
+  background: #f1f1f1;
+  color: #444;
+  font-weight: 700;
+  text-align: center;
+}
+
+.simulation-progression-table thead tr:first-child th {
+  top: 0;
+}
+
+.simulation-progression-table thead tr:nth-child(2) th {
+  top: 34px;
+}
+
+.simulation-progression-table thead tr:first-child th:first-child,
+.simulation-progression-table tbody th {
+  left: 0;
+  min-width: 72px;
+}
+
+.simulation-progression-table thead tr:first-child th:nth-child(2),
+.simulation-progression-table tbody td:nth-child(2) {
+  left: 72px;
+  min-width: 145px;
+}
+
+.simulation-progression-table thead tr:first-child th:first-child,
+.simulation-progression-table thead tr:first-child th:nth-child(2) {
+  z-index: 5;
+}
+
+.simulation-progression-table tbody th,
+.simulation-progression-table tbody td:nth-child(2) {
+  position: sticky;
+  z-index: 2;
+  background: #fff;
+}
+
+.simulation-progression-table tbody th {
+  font-weight: 700;
+}
+
+.simulation-progression-table tbody tr.target-type-row th,
+.simulation-progression-table tbody tr.target-type-row td {
+  background: #eef5ef;
+}
+
+.simulation-result-type {
+  text-align: left !important;
+}
+
+.simulation-result-type strong {
+  font-size: 11px;
+}
+
+.simulation-result-type small {
+  margin-left: 6px;
+  padding: 1px 4px;
+  background: #315f3e;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.simulation-progression-table .positive {
+  color: var(--positive);
+  font-weight: 700;
+}
+
+.simulation-progression-table .negative {
+  color: var(--negative);
+  font-weight: 700;
+}
+
+.simulation-progression-table .zero {
+  color: #888;
+}
+
 .simulation-plan-list {
   max-height: 474px;
   overflow: auto;
@@ -3132,5 +3332,29 @@ a {
 
   .data-note {
     line-height: 1.5;
+  }
+}
+
+@media (max-width: 680px) {
+  .simulation-progression-section .subsection-heading,
+  .simulation-selected-menu {
+    display: grid;
+  }
+
+  .simulation-repeat-field {
+    justify-self: start;
+  }
+
+  .simulation-selected-menu {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .simulation-selected-menu-name {
+    grid-column: 1 / -1;
+  }
+
+  .simulation-target-result {
+    white-space: normal;
   }
 }
