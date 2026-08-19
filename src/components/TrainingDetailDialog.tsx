@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { calculateTypeVector } from '../typeVector'
 import type { SpecialMenu } from '../types'
 
 type MetricKey =
@@ -85,6 +86,8 @@ export function TrainingDetailDialog({
   menu,
   onClose,
 }: TrainingDetailDialogProps) {
+  const typeVector = calculateTypeVector(menu)
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -182,6 +185,61 @@ export function TrainingDetailDialog({
             </div>
           ))}
         </div>
+
+        <section
+          className="training-type-vector"
+          aria-labelledby="training-type-vector-heading"
+        >
+          <div className="training-type-vector-heading">
+            <div>
+              <h3 id="training-type-vector-heading">タイプベクトル</h3>
+              <p>初期裏パラをすべて30とした、特訓単体のタイプ傾向です。</p>
+            </div>
+            <span>距離改善量方式</span>
+          </div>
+
+          <div className="training-type-vector-summary">
+            <div>
+              <span>{typeVector.isComposite ? '複合傾向' : 'タイプ傾向'}</span>
+              <strong>{typeVector.tendencyLabel}</strong>
+            </div>
+            <div>
+              <span>主タイプ</span>
+              <strong>{typeVector.primaryType ?? 'なし'}</strong>
+            </div>
+            <div>
+              <span>副タイプ</span>
+              <strong>{typeVector.secondaryType ?? 'なし'}</strong>
+            </div>
+            <div>
+              <span>総変化量</span>
+              <strong>{typeVector.totalChange}</strong>
+            </div>
+          </div>
+
+          <div className="training-type-vector-grid">
+            {typeVector.entries.map((entry) => {
+              const isPrimary = entry.type === typeVector.primaryType
+              const isSecondary = entry.type === typeVector.secondaryType
+
+              return (
+                <div
+                  className={`training-type-vector-entry ${valueTone(entry.value)}`}
+                  key={entry.type}
+                >
+                  <span>{entry.type}</span>
+                  <strong>{formatGain(entry.value)}</strong>
+                  {isPrimary && <small>主</small>}
+                  {!isPrimary && isSecondary && <small>副</small>}
+                </div>
+              )
+            })}
+          </div>
+
+          <p className="training-type-vector-note">
+            正の値はそのタイプへ近づき、負の値は遠ざかる傾向を示します。実際の変化は選手の現在値によって異なります。
+          </p>
+        </section>
       </section>
     </div>
   )
