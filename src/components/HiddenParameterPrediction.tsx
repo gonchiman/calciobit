@@ -9,6 +9,10 @@ import {
   type PositioningKey,
 } from '../typeEstimation'
 import type { SpecialMenu } from '../types'
+import { useSpecialMenuSearch } from '../useSpecialMenuSearch'
+import { SpecialMenuSearchFilters } from './SpecialMenuSearchFilters'
+import { TrainingDetailDialog } from './TrainingDetailDialog'
+import { TypeSelectionCards } from './TypeSelectionCards'
 
 const parameterGroups: Array<{
   label: string
@@ -83,22 +87,19 @@ export function HiddenParameterPrediction({
   const [beforeType, setBeforeType] = useState<EstimatableType | ''>('')
   const [afterType, setAfterType] = useState<EstimatableType | ''>('')
   const [menuName, setMenuName] = useState('')
-  const [query, setQuery] = useState('')
-
-  const filteredMenus = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase('ja')
-
-    return menus
-      .filter(
-        (menu) =>
-          !normalizedQuery ||
-          menu.name.toLocaleLowerCase('ja').includes(normalizedQuery) ||
-          menu.cards.some((card) =>
-            card.toLocaleLowerCase('ja').includes(normalizedQuery),
-          ),
-      )
-      .sort((first, second) => first.name.localeCompare(second.name, 'ja'))
-  }, [menus, query])
+  const [detailMenu, setDetailMenu] = useState<SpecialMenu | null>(null)
+  const {
+    addCardFilter,
+    cardOptions,
+    filteredMenus,
+    initialGroup,
+    query,
+    removeCardFilter,
+    resetSearch,
+    selectedCards,
+    setInitialGroup,
+    setQuery,
+  } = useSpecialMenuSearch(menus)
 
   const selectedMenu = useMemo(
     () => menus.find((menu) => menu.name === menuName) ?? null,
@@ -117,7 +118,7 @@ export function HiddenParameterPrediction({
     setBeforeType('')
     setAfterType('')
     setMenuName('')
-    setQuery('')
+    resetSearch()
   }
 
   return (
@@ -134,78 +135,80 @@ export function HiddenParameterPrediction({
         </div>
       </div>
 
-      <div className="prediction-input-panel">
-        <div className="prediction-transition-fields">
-          <label className="field">
-            <span>特訓前のタイプ</span>
-            <select
-              value={beforeType}
-              onChange={(event) =>
-                setBeforeType(event.target.value as EstimatableType | '')
-              }
-            >
-              <option value="">選択してください</option>
-              {estimatableTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
+      <TypeSelectionCards
+        id="prediction-type-selector"
+        types={estimatableTypes}
+        description="各タイプの「特訓前」と「特訓後」を選択します。バランスは基準値がないため予測対象外です。"
+        primaryLabel="特訓前"
+        primaryValue={beforeType}
+        onPrimaryChange={setBeforeType}
+        secondaryLabel="特訓後"
+        secondaryValue={afterType}
+        onSecondaryChange={setAfterType}
+        allowPrimaryClear
+        allowSecondaryClear
+        className="prediction-type-selector"
+      />
 
-          <span className="prediction-arrow" aria-hidden="true">
-            →
-          </span>
-
-          <label className="field">
-            <span>特訓後のタイプ</span>
-            <select
-              value={afterType}
-              onChange={(event) =>
-                setAfterType(event.target.value as EstimatableType | '')
-              }
-            >
-              <option value="">選択してください</option>
-              {estimatableTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
+      <section
+        className="comparison-picker prediction-menu-picker"
+        aria-labelledby="prediction-menu-picker-heading"
+      >
+        <div className="subsection-heading">
+          <h3 id="prediction-menu-picker-heading">実行した特訓を選ぶ</h3>
+          <span>{filteredMenus.length}件</span>
         </div>
 
-        <p className="prediction-balance-note">
-          ※バランスは基準値がないため予測対象外
-        </p>
+        <SpecialMenuSearchFilters
+          query={query}
+          onQueryChange={setQuery}
+          cardOptions={cardOptions}
+          selectedCards={selectedCards}
+          onAddCard={addCardFilter}
+          onRemoveCard={removeCardFilter}
+          initialGroup={initialGroup}
+          onInitialGroupChange={setInitialGroup}
+          onReset={resetSearch}
+        />
 
-        <div className="prediction-training-fields">
-          <label className="field">
-            <span>特訓を絞り込む</span>
-            <input
-              type="search"
-              value={query}
-              placeholder="特訓名・必要な課題"
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </label>
+        <div className="menu-results" aria-live="polite">
+          {filteredMenus.length > 0 ? (
+            filteredMenus.map((menu) => {
+              const isSelected = menuName === menu.name
 
-          <label className="field">
-            <span>実行した特訓</span>
-            <select
-              value={menuName}
-              onChange={(event) => setMenuName(event.target.value)}
-            >
-              <option value="">選択してください（{filteredMenus.length}件）</option>
-              {filteredMenus.map((menu) => (
-                <option key={menu.name} value={menu.name}>
-                  {menu.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              return (
+                <div className="menu-result-row" key={menu.name}>
+                  <button
+                    type="button"
+                    className="menu-result-name training-info-trigger"
+                    onClick={() => setDetailMenu(menu)}
+                    aria-label={`${menu.name}の情報を表示`}
+                    title="特訓情報を表示"
+                  >
+                    <strong>{menu.name}</strong>
+                    <span>{menu.cards.join(' / ')}</span>
+                  </button>
+                  <span className="menu-result-total">合計 {menu.total}</span>
+                  <button
+                    type="button"
+                    className="add-menu-button"
+                    onClick={() => setMenuName(menu.name)}
+                    disabled={isSelected}
+                  >
+                    {isSelected ? '選択中' : '選択'}
+                  </button>
+                </div>
+              )
+            })
+          ) : (
+            <div className="comparison-empty compact">
+              条件に一致する特訓がありません。
+            </div>
+          )}
         </div>
+      </section>
 
+      <div className="prediction-input-actions">
         <button className="reset-button" type="button" onClick={clearInputs}>
           入力をクリア
         </button>
@@ -268,6 +271,13 @@ export function HiddenParameterPrediction({
           </p>
         </div>
       </details>
+
+      {detailMenu && (
+        <TrainingDetailDialog
+          menu={detailMenu}
+          onClose={() => setDetailMenu(null)}
+        />
+      )}
     </section>
   )
 }

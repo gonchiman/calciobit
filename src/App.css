@@ -2066,41 +2066,22 @@ a {
   margin-bottom: 14px;
 }
 
-.prediction-input-panel {
-  display: grid;
-  grid-template-columns: minmax(340px, 0.9fr) minmax(380px, 1.1fr) auto;
-  align-items: end;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid #aaa;
-  background: #fafafa;
+.prediction-type-selector {
+  margin-bottom: 14px;
 }
 
-.prediction-transition-fields,
-.prediction-training-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: end;
-  gap: 8px;
+.prediction-menu-picker {
+  padding-bottom: 10px;
 }
 
-.prediction-training-fields {
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+.prediction-input-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 
-.prediction-balance-note {
-  grid-column: 1;
-  margin: 3px 0 0;
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.prediction-arrow {
-  display: grid;
-  height: 34px;
-  place-items: center;
-  color: #666;
-  font-size: 18px;
+.prediction-input-actions .reset-button {
+  min-width: 150px;
 }
 
 .prediction-menu-summary {
@@ -2702,18 +2683,6 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .prediction-input-panel {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .prediction-input-panel .reset-button {
-    grid-column: 1 / -1;
-  }
-
-  .prediction-balance-note {
-    grid-column: 1;
-  }
-
   .type-picker {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -2863,19 +2832,6 @@ a {
 
   .recommendation-list {
     grid-template-columns: 1fr;
-  }
-
-  .prediction-input-panel {
-    grid-template-columns: 1fr;
-  }
-
-  .prediction-input-panel .reset-button {
-    grid-column: auto;
-    width: 100%;
-  }
-
-  .prediction-balance-note {
-    grid-column: auto;
   }
 
   .prediction-tables {
@@ -3119,15 +3075,8 @@ a {
     padding: 7px;
   }
 
-  .prediction-transition-fields,
-  .prediction-training-fields,
   .prediction-menu-summary {
     grid-template-columns: 1fr;
-  }
-
-  .prediction-arrow {
-    height: 18px;
-    transform: rotate(90deg);
   }
 
   .prediction-menu-summary > div {
@@ -3146,6 +3095,10 @@ a {
 
   .prediction-summary-grid strong {
     font-size: 14px;
+  }
+
+  .prediction-input-actions .reset-button {
+    width: 100%;
   }
 
   .type-picker-header {

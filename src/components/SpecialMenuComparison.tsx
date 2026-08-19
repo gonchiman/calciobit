@@ -1,11 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
-import {
-  compareMenuReadings,
-  getInitialGroup,
-  initialGroups,
-  type InitialGroup,
-} from '../specialMenuSearch'
 import type { SpecialMenu } from '../types'
+import { useSpecialMenuSearch } from '../useSpecialMenuSearch'
+import { SpecialMenuSearchFilters } from './SpecialMenuSearchFilters'
 import { TrainingDetailDialog } from './TrainingDetailDialog'
 
 type MetricKey =
@@ -86,37 +82,20 @@ type SpecialMenuComparisonProps = {
 }
 
 export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
-  const [query, setQuery] = useState('')
-  const [initialGroup, setInitialGroup] = useState<InitialGroup>('all')
-  const [selectedCards, setSelectedCards] = useState<string[]>([])
   const [selectedMenuNames, setSelectedMenuNames] = useState<string[]>([])
   const [detailMenu, setDetailMenu] = useState<SpecialMenu | null>(null)
-
-  const cardOptions = useMemo(
-    () =>
-      Array.from(new Set(menus.flatMap((menu) => menu.cards))).sort((a, b) =>
-        a.localeCompare(b, 'ja'),
-      ),
-    [menus],
-  )
-
-  const filteredMenus = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase('ja')
-
-    const matches = menus.filter(
-      (menu) =>
-        (initialGroup === 'all' || getInitialGroup(menu.name) === initialGroup) &&
-        (!normalizedQuery ||
-          menu.name.toLocaleLowerCase('ja').includes(normalizedQuery)) &&
-        selectedCards.every((card) => menu.cards.includes(card)),
-    )
-
-    if (initialGroup === 'all') return matches
-
-    return [...matches].sort((firstMenu, secondMenu) =>
-      compareMenuReadings(firstMenu.name, secondMenu.name),
-    )
-  }, [initialGroup, menus, query, selectedCards])
+  const {
+    addCardFilter,
+    cardOptions,
+    filteredMenus,
+    initialGroup,
+    query,
+    removeCardFilter,
+    resetSearch,
+    selectedCards,
+    setInitialGroup,
+    setQuery,
+  } = useSpecialMenuSearch(menus)
 
   const selectedMenus = useMemo(
     () =>
@@ -125,12 +104,6 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
         .filter((menu): menu is SpecialMenu => Boolean(menu)),
     [menus, selectedMenuNames],
   )
-
-  const addCardFilter = (card: string) => {
-    if (card && !selectedCards.includes(card)) {
-      setSelectedCards((current) => [...current, card])
-    }
-  }
 
   const addMenu = (name: string) => {
     setSelectedMenuNames((current) =>
@@ -142,12 +115,6 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
     setSelectedMenuNames((current) =>
       current.filter((selectedName) => selectedName !== name),
     )
-  }
-
-  const resetSearch = () => {
-    setQuery('')
-    setInitialGroup('all')
-    setSelectedCards([])
   }
 
   return (
@@ -167,79 +134,17 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
           <span>{filteredMenus.length}件</span>
         </div>
 
-        <div className="comparison-filters">
-          <label className="field">
-            <span>特訓名で検索</span>
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="例：シュート、守護神"
-            />
-          </label>
-
-          <label className="field">
-            <span>必要な課題で絞り込み</span>
-            <select
-              value=""
-              onChange={(event) => addCardFilter(event.target.value)}
-            >
-              <option value="">課題を追加</option>
-              {cardOptions.map((card) => (
-                <option
-                  key={card}
-                  value={card}
-                  disabled={selectedCards.includes(card)}
-                >
-                  {card}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <button className="reset-button" type="button" onClick={resetSearch}>
-            検索条件をリセット
-          </button>
-        </div>
-
-        <div className="initial-filter" role="group" aria-label="特訓名の頭文字">
-          <span>頭文字</span>
-          <div className="initial-filter-options">
-            {initialGroups.map((group) => (
-              <button
-                key={group.value}
-                type="button"
-                className={initialGroup === group.value ? 'active' : undefined}
-                aria-pressed={initialGroup === group.value}
-                onClick={() => setInitialGroup(group.value)}
-              >
-                {group.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {selectedCards.length > 0 && (
-          <div className="selected-card-filters" aria-label="選択中の課題">
-            {selectedCards.map((card) => (
-              <span key={card}>
-                {card}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedCards((current) =>
-                      current.filter((selectedCard) => selectedCard !== card),
-                    )
-                  }
-                  aria-label={`${card}の絞り込みを解除`}
-                  title="絞り込みを解除"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
+        <SpecialMenuSearchFilters
+          query={query}
+          onQueryChange={setQuery}
+          cardOptions={cardOptions}
+          selectedCards={selectedCards}
+          onAddCard={addCardFilter}
+          onRemoveCard={removeCardFilter}
+          initialGroup={initialGroup}
+          onInitialGroupChange={setInitialGroup}
+          onReset={resetSearch}
+        />
 
         <div className="menu-results" aria-live="polite">
           {filteredMenus.length > 0 ? (

@@ -10,18 +10,15 @@ import {
 } from '../typeEstimation'
 import type { SpecialMenu } from '../types'
 import {
-  compareMenuReadings,
-  getInitialGroup,
-  initialGroups,
-  type InitialGroup,
-} from '../specialMenuSearch'
-import {
   defaultTypeReferenceSort,
   sortTypeReferences,
   toggleTypeReferenceSort,
   type TypeReferenceSort,
 } from '../typeReferenceSorting'
+import { useSpecialMenuSearch } from '../useSpecialMenuSearch'
+import { SpecialMenuSearchFilters } from './SpecialMenuSearchFilters'
 import { TrainingDetailDialog } from './TrainingDetailDialog'
+import { TypeSelectionCards } from './TypeSelectionCards'
 
 const numericMetricKeys = [
   'kick',
@@ -147,9 +144,6 @@ type TrainingSimulationProps = {
 }
 
 export function TrainingSimulation({ menus }: TrainingSimulationProps) {
-  const [query, setQuery] = useState('')
-  const [initialGroup, setInitialGroup] = useState<InitialGroup>('all')
-  const [selectedCards, setSelectedCards] = useState<string[]>([])
   const [selections, setSelections] = useState<Selection[]>([])
   const [currentType, setCurrentType] = useState<PlayerType>('バランス')
   const [targetType, setTargetType] = useState<PlayerType | ''>('')
@@ -161,32 +155,18 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
     () => sortTypeReferences(typeTableSort),
     [typeTableSort],
   )
-
-  const cardOptions = useMemo(
-    () =>
-      Array.from(new Set(menus.flatMap((menu) => menu.cards))).sort((a, b) =>
-        a.localeCompare(b, 'ja'),
-      ),
-    [menus],
-  )
-
-  const filteredMenus = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase('ja')
-
-    const matches = menus.filter(
-      (menu) =>
-        (initialGroup === 'all' || getInitialGroup(menu.name) === initialGroup) &&
-        (!normalizedQuery ||
-          menu.name.toLocaleLowerCase('ja').includes(normalizedQuery)) &&
-        selectedCards.every((card) => menu.cards.includes(card)),
-    )
-
-    if (initialGroup === 'all') return matches
-
-    return [...matches].sort((firstMenu, secondMenu) =>
-      compareMenuReadings(firstMenu.name, secondMenu.name),
-    )
-  }, [initialGroup, menus, query, selectedCards])
+  const {
+    addCardFilter,
+    cardOptions,
+    filteredMenus,
+    initialGroup,
+    query,
+    removeCardFilter,
+    resetSearch,
+    selectedCards,
+    setInitialGroup,
+    setQuery,
+  } = useSpecialMenuSearch(menus)
 
   const selectedMenus = useMemo(
     () =>
@@ -260,18 +240,6 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
       )
   }, [currentPositioningValues, menus, targetPositioningValues])
 
-  const addCardFilter = (card: string) => {
-    if (card && !selectedCards.includes(card)) {
-      setSelectedCards((current) => [...current, card])
-    }
-  }
-
-  const resetSearch = () => {
-    setQuery('')
-    setInitialGroup('all')
-    setSelectedCards([])
-  }
-
   const addTraining = (name: string) => {
     setSelections((current) => {
       const existing = current.find((selection) => selection.name === name)
@@ -314,73 +282,18 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
         </div>
       </div>
 
-      <section
-        className="simulation-type-selector"
-        aria-labelledby="simulation-type-selector-heading"
-      >
-        <div className="simulation-type-selector-heading">
-          <div>
-            <h3 id="simulation-type-selector-heading">タイプ指定</h3>
-            <p>
-              各タイプの「現在」と「目標」を選択します。選択中の目標は再度押すと解除できます。
-            </p>
-          </div>
-          <div className="simulation-type-selection" aria-live="polite">
-            <span>
-              現在 <strong>{currentType}</strong>
-            </span>
-            <i aria-hidden="true">→</i>
-            <span>
-              目標 <strong>{targetType || '未指定'}</strong>
-            </span>
-          </div>
-        </div>
-
-        <div className="simulation-type-card-grid">
-          {playerTypes.map((type) => {
-            const isCurrent = currentType === type
-            const isTarget = targetType === type
-
-            return (
-              <div
-                className={`simulation-type-card${
-                  isCurrent ? ' is-current' : ''
-                }${isTarget ? ' is-target' : ''}`}
-                key={type}
-              >
-                <strong className="simulation-type-card-name">{type}</strong>
-                <div
-                  className="simulation-type-card-actions"
-                  role="group"
-                  aria-label={`${type}の指定`}
-                >
-                  <button
-                    type="button"
-                    className={`simulation-type-choice current${
-                      isCurrent ? ' is-active' : ''
-                    }`}
-                    aria-pressed={isCurrent}
-                    onClick={() => setCurrentType(type)}
-                  >
-                    現在
-                  </button>
-                  <button
-                    type="button"
-                    className={`simulation-type-choice target${
-                      isTarget ? ' is-active' : ''
-                    }`}
-                    aria-pressed={isTarget}
-                    onClick={() => setTargetType(isTarget ? '' : type)}
-                  >
-                    目標
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        <div className="simulation-type-bar">
+      <TypeSelectionCards
+        id="simulation-type-selector"
+        types={playerTypes}
+        description="各タイプの「現在」と「目標」を選択します。選択中の目標は再度押すと解除できます。"
+        primaryLabel="現在"
+        primaryValue={currentType}
+        onPrimaryChange={(type) => type && setCurrentType(type)}
+        secondaryLabel="目標"
+        secondaryValue={targetType}
+        onSecondaryChange={setTargetType}
+        footer={
+          <>
           <div className="estimated-type" aria-live="polite">
             <span>特訓後タイプ（推定）</span>
             <strong>{estimatedType}</strong>
@@ -390,8 +303,9 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
             <strong>{totalTrainings}</strong>
             <span>回の特訓</span>
           </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       <details className="type-reference simulation-disclosure">
         <summary>タイプ変更表</summary>
@@ -544,91 +458,17 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
           </summary>
 
           <div className="simulation-picker-content">
-            <div className="comparison-filters">
-              <label className="field">
-                <span>特訓名で検索</span>
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="例：シュート、守護神"
-                />
-              </label>
-
-              <label className="field">
-                <span>必要な課題で絞り込み</span>
-                <select
-                  value=""
-                  onChange={(event) => addCardFilter(event.target.value)}
-                >
-                  <option value="">課題を追加</option>
-                  {cardOptions.map((card) => (
-                    <option
-                      key={card}
-                      value={card}
-                      disabled={selectedCards.includes(card)}
-                    >
-                      {card}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button
-                className="reset-button"
-                type="button"
-                onClick={resetSearch}
-              >
-                検索条件をリセット
-              </button>
-            </div>
-
-            <div
-              className="initial-filter"
-              role="group"
-              aria-label="特訓名の頭文字"
-            >
-              <span>頭文字</span>
-              <div className="initial-filter-options">
-                {initialGroups.map((group) => (
-                  <button
-                    key={group.value}
-                    type="button"
-                    className={
-                      initialGroup === group.value ? 'active' : undefined
-                    }
-                    aria-pressed={initialGroup === group.value}
-                    onClick={() => setInitialGroup(group.value)}
-                  >
-                    {group.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {selectedCards.length > 0 && (
-              <div className="selected-card-filters" aria-label="選択中の課題">
-                {selectedCards.map((card) => (
-                  <span key={card}>
-                    {card}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedCards((current) =>
-                          current.filter(
-                            (selectedCard) => selectedCard !== card,
-                          ),
-                        )
-                      }
-                      aria-label={`${card}の絞り込みを解除`}
-                      title="絞り込みを解除"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+            <SpecialMenuSearchFilters
+              query={query}
+              onQueryChange={setQuery}
+              cardOptions={cardOptions}
+              selectedCards={selectedCards}
+              onAddCard={addCardFilter}
+              onRemoveCard={removeCardFilter}
+              initialGroup={initialGroup}
+              onInitialGroupChange={setInitialGroup}
+              onReset={resetSearch}
+            />
 
             <div className="menu-results" aria-live="polite">
               {filteredMenus.length > 0 ? (
