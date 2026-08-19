@@ -244,12 +244,6 @@ export function TypeInformation() {
     )
   }
 
-  const selectTypeFromTable = (type: PlayerType) => {
-    setSelectedTypes((current) =>
-      current.includes(type) ? current : [...current, type],
-    )
-  }
-
   return (
     <section className="type-information-page" aria-labelledby="type-info-heading">
       <div className="section-heading type-info-heading">
@@ -340,7 +334,7 @@ export function TypeInformation() {
         <div className="subsection-heading">
           <div>
             <h3 id="type-table-heading">タイプ変更表</h3>
-            <p>タイプ名をクリックすると、チャートへ追加します。</p>
+            <p>タイプ名をクリックすると、チャート表示を切り替えます。</p>
           </div>
         </div>
 
@@ -370,7 +364,8 @@ export function TypeInformation() {
                       <button
                         type="button"
                         style={{ '--type-color': typeColors[type] } as React.CSSProperties}
-                        onClick={() => selectTypeFromTable(type)}
+                        aria-pressed={isSelected}
+                        onClick={() => toggleType(type)}
                       >
                         <span className="type-color-swatch" aria-hidden="true" />
                         {type}
