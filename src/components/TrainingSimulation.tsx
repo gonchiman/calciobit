@@ -10,6 +10,12 @@ import {
 } from '../typeEstimation'
 import type { SpecialMenu } from '../types'
 import {
+  compareMenuReadings,
+  getInitialGroup,
+  initialGroups,
+  type InitialGroup,
+} from '../specialMenuSearch'
+import {
   defaultTypeReferenceSort,
   sortTypeReferences,
   toggleTypeReferenceSort,
@@ -45,7 +51,6 @@ const numericMetricKeys = [
 
 type NumericMetricKey = (typeof numericMetricKeys)[number]
 type Metric = { key: NumericMetricKey; label: string }
-type SortDirection = 'desc' | 'asc'
 
 const basicMetrics: Metric[] = [
   { key: 'kick', label: 'キック' },
@@ -82,18 +87,6 @@ const hiddenMetricGroups: Array<{ label: string; metrics: Metric[] }> = [
       { key: 'intercept', label: 'インターセプト' },
     ],
   },
-]
-
-const sortMetricGroups: Array<{ label: string; metrics: Metric[] }> = [
-  {
-    label: '基本パラメータ',
-    metrics: [
-      { key: 'total', label: '基本合計' },
-      ...basicMetrics,
-      { key: 'fatigue', label: '疲労蓄積値' },
-    ],
-  },
-  ...hiddenMetricGroups,
 ]
 
 const positioningLabels: Record<PositioningKey, string> = {
@@ -155,9 +148,8 @@ type TrainingSimulationProps = {
 
 export function TrainingSimulation({ menus }: TrainingSimulationProps) {
   const [query, setQuery] = useState('')
+  const [initialGroup, setInitialGroup] = useState<InitialGroup>('all')
   const [selectedCards, setSelectedCards] = useState<string[]>([])
-  const [sortKey, setSortKey] = useState<NumericMetricKey>('total')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [selections, setSelections] = useState<Selection[]>([])
   const [currentType, setCurrentType] = useState<PlayerType>('バランス')
   const [targetType, setTargetType] = useState<PlayerType | ''>('')
@@ -181,26 +173,20 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
   const filteredMenus = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('ja')
 
-    return menus
-      .filter(
-        (menu) =>
-          (!normalizedQuery ||
-            menu.name.toLocaleLowerCase('ja').includes(normalizedQuery)) &&
-          selectedCards.every((card) => menu.cards.includes(card)),
-      )
-      .sort((first, second) => {
-        const difference = first[sortKey] - second[sortKey]
+    const matches = menus.filter(
+      (menu) =>
+        (initialGroup === 'all' || getInitialGroup(menu.name) === initialGroup) &&
+        (!normalizedQuery ||
+          menu.name.toLocaleLowerCase('ja').includes(normalizedQuery)) &&
+        selectedCards.every((card) => menu.cards.includes(card)),
+    )
 
-        return (
-          (sortDirection === 'asc' ? difference : -difference) ||
-          first.name.localeCompare(second.name, 'ja')
-        )
-      })
-  }, [menus, query, selectedCards, sortDirection, sortKey])
+    if (initialGroup === 'all') return matches
 
-  const sortLabel = sortMetricGroups
-    .flatMap((group) => group.metrics)
-    .find((metric) => metric.key === sortKey)?.label
+    return [...matches].sort((firstMenu, secondMenu) =>
+      compareMenuReadings(firstMenu.name, secondMenu.name),
+    )
+  }, [initialGroup, menus, query, selectedCards])
 
   const selectedMenus = useMemo(
     () =>
@@ -280,6 +266,12 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
     }
   }
 
+  const resetSearch = () => {
+    setQuery('')
+    setInitialGroup('all')
+    setSelectedCards([])
+  }
+
   const addTraining = (name: string) => {
     setSelections((current) => {
       const existing = current.find((selection) => selection.name === name)
@@ -322,52 +314,84 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
         </div>
       </div>
 
-      <div className="simulation-type-bar">
-        <label className="field simulation-type-field">
-          <span>現在のタイプ</span>
-          <select
-            value={currentType}
-            onChange={(event) => setCurrentType(event.target.value as PlayerType)}
-          >
-            {playerTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <span className="type-transition" aria-hidden="true">
-          →
-        </span>
-
-        <label className="field simulation-target-field">
-          <span>目標タイプ</span>
-          <select
-            value={targetType}
-            onChange={(event) =>
-              setTargetType(event.target.value as PlayerType | '')
-            }
-          >
-            <option value="">選択してください</option>
-            {playerTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="estimated-type" aria-live="polite">
-          <span>特訓後タイプ（推定）</span>
-          <strong>{estimatedType}</strong>
+      <section
+        className="simulation-type-selector"
+        aria-labelledby="simulation-type-selector-heading"
+      >
+        <div className="simulation-type-selector-heading">
+          <div>
+            <h3 id="simulation-type-selector-heading">タイプ指定</h3>
+            <p>
+              各タイプの「現在」と「目標」を選択します。選択中の目標は再度押すと解除できます。
+            </p>
+          </div>
+          <div className="simulation-type-selection" aria-live="polite">
+            <span>
+              現在 <strong>{currentType}</strong>
+            </span>
+            <i aria-hidden="true">→</i>
+            <span>
+              目標 <strong>{targetType || '未指定'}</strong>
+            </span>
+          </div>
         </div>
 
-        <div className="simulation-session-count">
-          <strong>{totalTrainings}</strong>
-          <span>回の特訓</span>
+        <div className="simulation-type-card-grid">
+          {playerTypes.map((type) => {
+            const isCurrent = currentType === type
+            const isTarget = targetType === type
+
+            return (
+              <div
+                className={`simulation-type-card${
+                  isCurrent ? ' is-current' : ''
+                }${isTarget ? ' is-target' : ''}`}
+                key={type}
+              >
+                <strong className="simulation-type-card-name">{type}</strong>
+                <div
+                  className="simulation-type-card-actions"
+                  role="group"
+                  aria-label={`${type}の指定`}
+                >
+                  <button
+                    type="button"
+                    className={`simulation-type-choice current${
+                      isCurrent ? ' is-active' : ''
+                    }`}
+                    aria-pressed={isCurrent}
+                    onClick={() => setCurrentType(type)}
+                  >
+                    現在
+                  </button>
+                  <button
+                    type="button"
+                    className={`simulation-type-choice target${
+                      isTarget ? ' is-active' : ''
+                    }`}
+                    aria-pressed={isTarget}
+                    onClick={() => setTargetType(isTarget ? '' : type)}
+                  >
+                    目標
+                  </button>
+                </div>
+              </div>
+            )
+          })}
         </div>
-      </div>
+
+        <div className="simulation-type-bar">
+          <div className="estimated-type" aria-live="polite">
+            <span>特訓後タイプ（推定）</span>
+            <strong>{estimatedType}</strong>
+          </div>
+
+          <div className="simulation-session-count">
+            <strong>{totalTrainings}</strong>
+            <span>回の特訓</span>
+          </div>
+        </div>
+      </section>
 
       <details className="type-reference simulation-disclosure">
         <summary>タイプ変更表</summary>
@@ -520,146 +544,132 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
           </summary>
 
           <div className="simulation-picker-content">
+            <div className="comparison-filters">
+              <label className="field">
+                <span>特訓名で検索</span>
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="例：シュート、守護神"
+                />
+              </label>
 
-          <div className="comparison-filters">
-            <label className="field">
-              <span>特訓名で検索</span>
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="例：シュート、守護神"
-              />
-            </label>
+              <label className="field">
+                <span>必要な課題で絞り込み</span>
+                <select
+                  value=""
+                  onChange={(event) => addCardFilter(event.target.value)}
+                >
+                  <option value="">課題を追加</option>
+                  {cardOptions.map((card) => (
+                    <option
+                      key={card}
+                      value={card}
+                      disabled={selectedCards.includes(card)}
+                    >
+                      {card}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label className="field">
-              <span>必要な課題で絞り込み</span>
-              <select
-                value=""
-                onChange={(event) => addCardFilter(event.target.value)}
+              <button
+                className="reset-button"
+                type="button"
+                onClick={resetSearch}
               >
-                <option value="">課題を追加</option>
-                {cardOptions.map((card) => (
-                  <option
-                    key={card}
-                    value={card}
-                    disabled={selectedCards.includes(card)}
-                  >
-                    {card}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="field simulation-sort-field">
-              <span>並べ替えるパラメータ</span>
-              <select
-                value={sortKey}
-                onChange={(event) =>
-                  setSortKey(event.target.value as NumericMetricKey)
-                }
-              >
-                {sortMetricGroups.map((group) => (
-                  <optgroup key={group.label} label={group.label}>
-                    {group.metrics.map((metric) => (
-                      <option key={metric.key} value={metric.key}>
-                        {metric.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>並び順</span>
-              <select
-                value={sortDirection}
-                onChange={(event) =>
-                  setSortDirection(event.target.value as SortDirection)
-                }
-              >
-                <option value="desc">降順（大きい順）</option>
-                <option value="asc">昇順（小さい順）</option>
-              </select>
-            </label>
-
-            <button
-              className="reset-button"
-              type="button"
-              onClick={() => {
-                setQuery('')
-                setSelectedCards([])
-              }}
-            >
-              検索条件をリセット
-            </button>
-          </div>
-
-          {selectedCards.length > 0 && (
-            <div className="selected-card-filters" aria-label="選択中の課題">
-              {selectedCards.map((card) => (
-                <span key={card}>
-                  {card}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedCards((current) =>
-                        current.filter((selectedCard) => selectedCard !== card),
-                      )
-                    }
-                    aria-label={`${card}の絞り込みを解除`}
-                    title="絞り込みを解除"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
+                検索条件をリセット
+              </button>
             </div>
-          )}
 
-          <div className="menu-results" aria-live="polite">
-            {filteredMenus.length > 0 ? (
-              filteredMenus.map((menu) => {
-                const selectedCount =
-                  selections.find((selection) => selection.name === menu.name)
-                    ?.count ?? 0
+            <div
+              className="initial-filter"
+              role="group"
+              aria-label="特訓名の頭文字"
+            >
+              <span>頭文字</span>
+              <div className="initial-filter-options">
+                {initialGroups.map((group) => (
+                  <button
+                    key={group.value}
+                    type="button"
+                    className={
+                      initialGroup === group.value ? 'active' : undefined
+                    }
+                    aria-pressed={initialGroup === group.value}
+                    onClick={() => setInitialGroup(group.value)}
+                  >
+                    {group.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                return (
-                  <div className="menu-result-row" key={menu.name}>
+            {selectedCards.length > 0 && (
+              <div className="selected-card-filters" aria-label="選択中の課題">
+                {selectedCards.map((card) => (
+                  <span key={card}>
+                    {card}
                     <button
                       type="button"
-                      className="menu-result-name training-info-trigger"
-                      onClick={() => setDetailMenu(menu)}
-                      aria-label={`${menu.name}の情報を表示`}
-                      title="特訓情報を表示"
+                      onClick={() =>
+                        setSelectedCards((current) =>
+                          current.filter(
+                            (selectedCard) => selectedCard !== card,
+                          ),
+                        )
+                      }
+                      aria-label={`${card}の絞り込みを解除`}
+                      title="絞り込みを解除"
                     >
-                      <strong>{menu.name}</strong>
-                      <span>{menu.cards.join(' / ')}</span>
+                      ×
                     </button>
-                    <span className="menu-result-total">
-                      {sortLabel}{' '}
-                      {sortKey === 'fatigue'
-                        ? menu[sortKey]
-                        : formatGain(menu[sortKey])}
-                      {selectedCount > 0 && ` / ${selectedCount}回`}
-                    </span>
-                    <button
-                      type="button"
-                      className="add-menu-button"
-                      onClick={() => addTraining(menu.name)}
-                    >
-                      追加
-                    </button>
-                  </div>
-                )
-              })
-            ) : (
-              <div className="comparison-empty compact">
-                条件に一致する特訓がありません。
+                  </span>
+                ))}
               </div>
             )}
-          </div>
+
+            <div className="menu-results" aria-live="polite">
+              {filteredMenus.length > 0 ? (
+                filteredMenus.map((menu) => {
+                  const selectedCount =
+                    selections.find(
+                      (selection) => selection.name === menu.name,
+                    )?.count ?? 0
+
+                  return (
+                    <div className="menu-result-row" key={menu.name}>
+                      <button
+                        type="button"
+                        className="menu-result-name training-info-trigger"
+                        onClick={() => setDetailMenu(menu)}
+                        aria-label={`${menu.name}の情報を表示`}
+                        title="特訓情報を表示"
+                      >
+                        <strong>{menu.name}</strong>
+                        <span>{menu.cards.join(' / ')}</span>
+                      </button>
+                      <span className="menu-result-total">
+                        合計 {menu.total}
+                        {selectedCount > 0 && ` / ${selectedCount}回`}
+                      </span>
+                      <button
+                        type="button"
+                        className="add-menu-button"
+                        onClick={() => addTraining(menu.name)}
+                      >
+                        追加
+                      </button>
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="comparison-empty compact">
+                  条件に一致する特訓がありません。
+                </div>
+              )}
+            </div>
           </div>
         </details>
 

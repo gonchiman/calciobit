@@ -1,5 +1,10 @@
 import { Fragment, useMemo, useState } from 'react'
-import { specialMenuReadings } from '../data/specialMenuReadings'
+import {
+  compareMenuReadings,
+  getInitialGroup,
+  initialGroups,
+  type InitialGroup,
+} from '../specialMenuSearch'
 import type { SpecialMenu } from '../types'
 import { TrainingDetailDialog } from './TrainingDetailDialog'
 
@@ -29,71 +34,6 @@ type MetricKey =
 type MetricGroup = {
   label: string
   metrics: Array<{ key: MetricKey; label: string }>
-}
-
-type InitialGroup =
-  | 'all'
-  | 'a'
-  | 'ka'
-  | 'sa'
-  | 'ta'
-  | 'na'
-  | 'ha'
-  | 'ma'
-  | 'ya'
-  | 'ra'
-  | 'wa'
-  | 'other'
-
-const initialGroups: Array<{ value: InitialGroup; label: string }> = [
-  { value: 'all', label: 'すべて' },
-  { value: 'a', label: 'あ行' },
-  { value: 'ka', label: 'か行' },
-  { value: 'sa', label: 'さ行' },
-  { value: 'ta', label: 'た行' },
-  { value: 'na', label: 'な行' },
-  { value: 'ha', label: 'は行' },
-  { value: 'ma', label: 'ま行' },
-  { value: 'ya', label: 'や行' },
-  { value: 'ra', label: 'ら行' },
-  { value: 'wa', label: 'わ行' },
-  { value: 'other', label: 'その他' },
-]
-
-const kanaByInitialGroup: Record<Exclude<InitialGroup, 'all' | 'other'>, string> = {
-  a: 'ぁあぃいうぅえぇおぉゔ',
-  ka: 'かがきぎくぐけげこご',
-  sa: 'さざしじすずせぜそぞ',
-  ta: 'ただちぢっつづてでとど',
-  na: 'なにぬねの',
-  ha: 'はばぱひびぴふぶぷへべぺほぼぽ',
-  ma: 'まみむめも',
-  ya: 'ゃやゅゆょよ',
-  ra: 'らりるれろ',
-  wa: 'ゎわゐゑをん',
-}
-
-function getMenuReading(name: string) {
-  const reading = (specialMenuReadings[name] ?? name).trim().normalize('NFKC')
-
-  return Array.from(reading, (character) => {
-    const codePoint = character.codePointAt(0)
-    return codePoint && codePoint >= 0x30a1 && codePoint <= 0x30f6
-      ? String.fromCodePoint(codePoint - 0x60)
-      : character
-  }).join('')
-}
-
-function getInitialGroup(name: string): Exclude<InitialGroup, 'all'> {
-  const firstCharacter = getMenuReading(name)[0]
-
-  if (!firstCharacter) return 'other'
-
-  const matchedGroup = Object.entries(kanaByInitialGroup).find(([, kana]) =>
-    kana.includes(firstCharacter),
-  )
-
-  return (matchedGroup?.[0] as Exclude<InitialGroup, 'all' | 'other'>) ?? 'other'
 }
 
 const metricGroups: MetricGroup[] = [
@@ -173,21 +113,9 @@ export function SpecialMenuComparison({ menus }: SpecialMenuComparisonProps) {
 
     if (initialGroup === 'all') return matches
 
-    return [...matches].sort((firstMenu, secondMenu) => {
-      const readingOrder = getMenuReading(firstMenu.name).localeCompare(
-        getMenuReading(secondMenu.name),
-        'ja',
-        { sensitivity: 'base', numeric: true },
-      )
-
-      return (
-        readingOrder ||
-        firstMenu.name.localeCompare(secondMenu.name, 'ja', {
-          sensitivity: 'base',
-          numeric: true,
-        })
-      )
-    })
+    return [...matches].sort((firstMenu, secondMenu) =>
+      compareMenuReadings(firstMenu.name, secondMenu.name),
+    )
   }, [initialGroup, menus, query, selectedCards])
 
   const selectedMenus = useMemo(
