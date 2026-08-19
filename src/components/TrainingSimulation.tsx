@@ -208,12 +208,20 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
         onSecondaryChange={setTargetType}
       />
 
-      <section
-        className="simulation-radar-section"
-        aria-label="現在と目標タイプのレーダーチャート"
-      >
-        <TypeRadarCharts idPrefix="simulation" series={radarSeries} />
-      </section>
+      <details className="simulation-radar-section simulation-disclosure">
+        <summary>
+          <span>レーダーチャート</span>
+          <small>
+            現在：{currentType} / 目標：{targetType || '未指定'}
+          </small>
+        </summary>
+        <div
+          className="simulation-radar-content"
+          aria-label="現在と目標タイプのレーダーチャート"
+        >
+          <TypeRadarCharts idPrefix="simulation" series={radarSeries} />
+        </div>
+      </details>
 
       <details className="simulation-recommendations simulation-disclosure">
         <summary>
