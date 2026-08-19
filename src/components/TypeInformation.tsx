@@ -235,10 +235,8 @@ function RadarChart({ id, title, keys, selectedTypes }: RadarChartProps) {
 
 export function TypeInformation() {
   const [selectedTypes, setSelectedTypes] = useState<PlayerType[]>(['バランス'])
-  const [describedType, setDescribedType] = useState<PlayerType>('バランス')
 
   const toggleType = (type: PlayerType) => {
-    setDescribedType(type)
     setSelectedTypes((current) =>
       current.includes(type)
         ? current.filter((selectedType) => selectedType !== type)
@@ -246,8 +244,7 @@ export function TypeInformation() {
     )
   }
 
-  const showTypeFromTable = (type: PlayerType) => {
-    setDescribedType(type)
+  const selectTypeFromTable = (type: PlayerType) => {
     setSelectedTypes((current) =>
       current.includes(type) ? current : [...current, type],
     )
@@ -284,8 +281,9 @@ export function TypeInformation() {
       </div>
 
       <div className="type-picker" role="group" aria-label="表示するタイプ">
-        {playerTypes.map((type) => {
+        {playerTypes.map((type, index) => {
           const isSelected = selectedTypes.includes(type)
+          const descriptionId = `type-hover-description-${index}`
 
           return (
             <button
@@ -293,30 +291,24 @@ export function TypeInformation() {
               key={type}
               className={isSelected ? 'selected' : undefined}
               aria-pressed={isSelected}
+              aria-describedby={descriptionId}
               style={{ '--type-color': typeColors[type] } as React.CSSProperties}
               onClick={() => toggleType(type)}
             >
               <span className="type-color-swatch" aria-hidden="true" />
               <span>{type}</span>
+              <span
+                className="type-hover-description"
+                id={descriptionId}
+                role="tooltip"
+              >
+                <strong>{type}</strong>
+                <span>{typeDescriptions[type]}</span>
+              </span>
             </button>
           )
         })}
       </div>
-
-      <article className="type-description" aria-live="polite">
-        <div className="type-description-title">
-          <span
-            className="type-color-swatch"
-            style={{ '--type-color': typeColors[describedType] } as React.CSSProperties}
-            aria-hidden="true"
-          />
-          <div>
-            <span>選手タイプの特徴</span>
-            <h3>{describedType}</h3>
-          </div>
-        </div>
-        <p>{typeDescriptions[describedType]}</p>
-      </article>
 
       <div className="radar-chart-grid">
         <RadarChart
@@ -348,7 +340,7 @@ export function TypeInformation() {
         <div className="subsection-heading">
           <div>
             <h3 id="type-table-heading">タイプ変更表</h3>
-            <p>タイプ名をクリックすると、特徴とチャートを表示します。</p>
+            <p>タイプ名をクリックすると、チャートへ追加します。</p>
           </div>
         </div>
 
@@ -368,7 +360,6 @@ export function TypeInformation() {
               {playerTypes.map((type) => {
                 const values = getTypeReferenceValues(type)
                 const isSelected = selectedTypes.includes(type)
-                const isDescribed = describedType === type
 
                 return (
                   <tr
@@ -378,9 +369,8 @@ export function TypeInformation() {
                     <th scope="row">
                       <button
                         type="button"
-                        className={isDescribed ? 'active' : undefined}
                         style={{ '--type-color': typeColors[type] } as React.CSSProperties}
-                        onClick={() => showTypeFromTable(type)}
+                        onClick={() => selectTypeFromTable(type)}
                       >
                         <span className="type-color-swatch" aria-hidden="true" />
                         {type}
