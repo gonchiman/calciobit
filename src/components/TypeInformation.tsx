@@ -240,7 +240,7 @@ function RadarChart({ id, title, keys, selectedTypes }: RadarChartProps) {
 }
 
 export function TypeInformation() {
-  const [selectedTypes, setSelectedTypes] = useState<PlayerType[]>(['バランス'])
+  const [selectedTypes, setSelectedTypes] = useState<PlayerType[]>([])
   const [tableSort, setTableSort] = useState<TypeReferenceSort>(
     defaultTypeReferenceSort,
   )
