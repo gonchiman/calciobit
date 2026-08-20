@@ -65,6 +65,16 @@ function formatDistance(distance: number) {
   return distance.toFixed(3)
 }
 
+function getMapDistance(firstType: PlayerType, secondType: PlayerType) {
+  const first = pointByType[firstType]
+  const second = pointByType[secondType]
+
+  return Math.hypot(
+    projectX(first.x) - projectX(second.x),
+    projectY(first.y) - projectY(second.y),
+  )
+}
+
 type TypeMapProps = {
   menus: SpecialMenu[]
 }
@@ -129,11 +139,12 @@ export function TypeMap({ menus }: TypeMapProps) {
       .filter((type) => type !== selectedType)
       .map((type) => ({
         type,
-        distance: TYPE_MAP_DISTANCES[selectedType][type],
+        mapDistance: getMapDistance(selectedType, type),
+        sourceDistance: TYPE_MAP_DISTANCES[selectedType][type],
       }))
       .sort(
         (first, second) =>
-          first.distance - second.distance ||
+          first.mapDistance - second.mapDistance ||
           first.type.localeCompare(second.type, 'ja'),
       )
       .slice(0, 3)
@@ -322,14 +333,14 @@ export function TypeMap({ menus }: TypeMapProps) {
           </svg>
 
           <p className="type-map-axis-note">
-            ※横軸・縦軸そのものに固定の意味はありません。点同士の距離と位置関係を見てください。
+            ※横軸・縦軸そのものに固定の意味はありません。「近いタイプ」は、このマップ上で点が近い順に表示します。
           </p>
         </section>
 
         <aside className="type-map-neighbors" aria-labelledby="type-map-neighbors-heading">
           <div className="type-map-neighbors-heading">
             <h3 id="type-map-neighbors-heading">近いタイプ</h3>
-            <span>正規化マンハッタン距離</span>
+            <span>マップ上の距離順</span>
           </div>
 
           {selectedType ? (
@@ -342,7 +353,7 @@ export function TypeMap({ menus }: TypeMapProps) {
                 <strong>{selectedType}</strong>
               </div>
               <ol className="type-map-neighbor-list">
-                {nearestTypes.map(({ type, distance }, index) => (
+                {nearestTypes.map(({ type, sourceDistance }, index) => (
                   <li key={type} style={getTypeColorStyle(type)}>
                     <span className="type-map-neighbor-number">{index + 1}</span>
                     <button type="button" onClick={() => setSelectedType(type)}>
@@ -350,7 +361,7 @@ export function TypeMap({ menus }: TypeMapProps) {
                     </button>
                     <span className="type-map-distance">
                       <small>12次元距離</small>
-                      <strong>{formatDistance(distance)}</strong>
+                      <strong>{formatDistance(sourceDistance)}</strong>
                     </span>
                   </li>
                 ))}
