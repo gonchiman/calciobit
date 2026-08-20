@@ -1837,7 +1837,9 @@ a {
 
 .type-map-point {
   cursor: pointer;
+  outline: none;
   transition: opacity 120ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .type-map-point-hit {
@@ -1861,6 +1863,7 @@ a {
   stroke-width: 2;
 }
 
+.type-map-point:focus,
 .type-map-point:focus-visible {
   outline: none;
 }
@@ -1871,7 +1874,7 @@ a {
 }
 
 .type-map-point.is-selected .type-map-point-mark {
-  stroke: #111;
+  stroke: var(--type-color);
   stroke-width: 2.4;
 }
 
