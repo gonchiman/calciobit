@@ -8,53 +8,19 @@ import {
   type PlayerType,
   type PositioningKey,
 } from '../typeEstimation'
+import {
+  defensePositioningKeys,
+  offensePositioningKeys,
+  positioningLabels,
+  type TrainingProgressionRow,
+} from '../trainingProgression'
 import type { SpecialMenu } from '../types'
 import { useSpecialMenuSearch } from '../useSpecialMenuSearch'
 import { SpecialMenuSearchFilters } from './SpecialMenuSearchFilters'
 import { TrainingDetailDialog } from './TrainingDetailDialog'
+import { TrainingProgressionChart } from './TrainingProgressionChart'
 import { TypeRadarCharts, type TypeRadarSeries } from './TypeRadarCharts'
 import { TypeSelectionCards } from './TypeSelectionCards'
-
-const offenseKeys: PositioningKey[] = [
-  'support',
-  'triangle',
-  'loseMark',
-  'overlap',
-  'diagonalRun',
-  'spaceRun',
-  'goalFront',
-]
-
-const defenseKeys: PositioningKey[] = [
-  'zoneMarking',
-  'manMarking',
-  'pressing',
-  'shootCut',
-  'intercept',
-]
-
-const positioningLabels: Record<PositioningKey, string> = {
-  support: 'サポート',
-  triangle: 'トライアングル',
-  loseMark: 'マークを外す',
-  overlap: 'オーバーラップ',
-  diagonalRun: 'ダイアゴナルラン',
-  spaceRun: 'スペースに走り込む',
-  goalFront: 'ゴール前待機',
-  zoneMarking: 'ゾーンマーキング',
-  manMarking: 'マンツーマン',
-  pressing: 'プレッシング',
-  shootCut: 'シュートカット',
-  intercept: 'インターセプト',
-}
-
-type ProgressionRow = {
-  count: number
-  type: PlayerType
-  values: Record<PositioningKey, number>
-  offenseQualityChange: number
-  defenseQualityChange: number
-}
 
 type RecommendedMenu = {
   menu: SpecialMenu
@@ -156,7 +122,7 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
     ]
   }, [currentType, targetType])
 
-  const progressionRows = useMemo<ProgressionRow[]>(() => {
+  const progressionRows = useMemo<TrainingProgressionRow[]>(() => {
     if (!selectedMenu) return []
 
     return Array.from({ length: repeatLimit }, (_, index) => {
@@ -393,6 +359,8 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
               </button>
             </div>
 
+            <TrainingProgressionChart rows={progressionRows} />
+
             <div className="simulation-progression-table-shell">
               <table className="simulation-progression-table">
                 <thead>
@@ -404,11 +372,11 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
                   </tr>
                   <tr>
                     <th scope="col">オフェンスQ<br />変化</th>
-                    {offenseKeys.map((key) => (
+                    {offensePositioningKeys.map((key) => (
                       <th scope="col" key={key}>{positioningLabels[key]}</th>
                     ))}
                     <th scope="col">ディフェンスQ<br />変化</th>
-                    {defenseKeys.map((key) => (
+                    {defensePositioningKeys.map((key) => (
                       <th scope="col" key={key}>{positioningLabels[key]}</th>
                     ))}
                   </tr>
@@ -433,13 +401,13 @@ export function TrainingSimulation({ menus }: TrainingSimulationProps) {
                         <td className={valueTone(row.offenseQualityChange)}>
                           {formatChange(row.offenseQualityChange)}
                         </td>
-                        {offenseKeys.map((key) => (
+                        {offensePositioningKeys.map((key) => (
                           <td key={key}>{row.values[key]}</td>
                         ))}
                         <td className={valueTone(row.defenseQualityChange)}>
                           {formatChange(row.defenseQualityChange)}
                         </td>
-                        {defenseKeys.map((key) => (
+                        {defensePositioningKeys.map((key) => (
                           <td key={key}>{row.values[key]}</td>
                         ))}
                       </tr>
