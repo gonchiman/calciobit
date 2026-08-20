@@ -6,9 +6,7 @@ import {
 } from 'react'
 import {
   TYPE_MAP_DISTANCES,
-  TYPE_MAP_NEAREST_MATCHES,
   TYPE_MAP_POINTS,
-  TYPE_MAP_STRESS,
 } from '../data/typeMap.generated'
 import { playerTypes, type PlayerType } from '../typeEstimation'
 import { typeColors } from '../typeColors'
@@ -17,6 +15,7 @@ import { calculateTypeVector } from '../typeVector'
 import { useSpecialMenuSearch } from '../useSpecialMenuSearch'
 import { SpecialMenuSearchFilters } from './SpecialMenuSearchFilters'
 import { TrainingDetailDialog } from './TrainingDetailDialog'
+import { TypeRadarCharts } from './TypeRadarCharts'
 
 type LabelPosition = {
   dx: number
@@ -77,6 +76,61 @@ function getMapDistance(firstType: PlayerType, secondType: PlayerType) {
   )
 }
 
+type DistanceRow = {
+  type: PlayerType
+  distance: number
+}
+
+type TypeDistanceTableProps = {
+  id: string
+  title: string
+  description: string
+  rows: DistanceRow[]
+  onSelectType: (type: PlayerType) => void
+}
+
+function TypeDistanceTable({
+  id,
+  title,
+  description,
+  rows,
+  onSelectType,
+}: TypeDistanceTableProps) {
+  return (
+    <section className="type-map-distance-card" aria-labelledby={`${id}-heading`}>
+      <div className="type-map-distance-heading">
+        <h4 id={`${id}-heading`}>{title}</h4>
+        <p>{description}</p>
+      </div>
+      <div className="type-map-distance-table-shell">
+        <table className="type-map-distance-table">
+          <thead>
+            <tr>
+              <th scope="col">順位</th>
+              <th scope="col">タイプ</th>
+              <th scope="col">距離</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ type, distance }, index) => (
+              <tr key={type} style={getTypeColorStyle(type)}>
+                <td>{index + 1}</td>
+                <th scope="row">
+                  <button type="button" onClick={() => onSelectType(type)}>
+                    <i aria-hidden="true" />
+                    {type}
+                  </button>
+                </th>
+                <td>{formatDistance(distance)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
 type TypeMapProps = {
   menus: SpecialMenu[]
 }
@@ -134,7 +188,7 @@ export function TypeMap({ menus }: TypeMapProps) {
         ) / totalWeight,
     }
   }, [selectedMenuVector])
-  const nearestTypes = useMemo(() => {
+  const distanceRows = useMemo(() => {
     if (!selectedType) return []
 
     return playerTypes
@@ -142,15 +196,35 @@ export function TypeMap({ menus }: TypeMapProps) {
       .map((type) => ({
         type,
         mapDistance: getMapDistance(selectedType, type),
-        sourceDistance: TYPE_MAP_DISTANCES[selectedType][type],
+        manhattanDistance: TYPE_MAP_DISTANCES[selectedType][type],
       }))
-      .sort(
-        (first, second) =>
-          first.mapDistance - second.mapDistance ||
-          first.type.localeCompare(second.type, 'ja'),
-      )
-      .slice(0, 3)
   }, [selectedType])
+  const mapDistanceRows = useMemo(
+    () =>
+      [...distanceRows]
+        .sort(
+          (first, second) =>
+            first.mapDistance - second.mapDistance ||
+            first.type.localeCompare(second.type, 'ja'),
+        )
+        .map(({ type, mapDistance }) => ({ type, distance: mapDistance })),
+    [distanceRows],
+  )
+  const manhattanDistanceRows = useMemo(
+    () =>
+      [...distanceRows]
+        .sort(
+          (first, second) =>
+            first.manhattanDistance - second.manhattanDistance ||
+            first.type.localeCompare(second.type, 'ja'),
+        )
+        .map(({ type, manhattanDistance }) => ({
+          type,
+          distance: manhattanDistance,
+        })),
+    [distanceRows],
+  )
+  const nearestTypes = mapDistanceRows.slice(0, 3)
   const neighborRank = new Map(
     nearestTypes.map(({ type }, index) => [type, index + 1]),
   )
@@ -185,7 +259,7 @@ export function TypeMap({ menus }: TypeMapProps) {
           <div className="type-map-card-heading">
             <div>
               <h3 id="type-map-chart-heading">タイプ同士の関係</h3>
-              <p>点を選ぶと、元の12次元空間で近い3タイプを強調します。</p>
+              <p>点を選ぶと、裏パラと全タイプとの距離を表示します。</p>
             </div>
             {selectedType && (
               <button type="button" onClick={() => setSelectedType(null)}>
@@ -335,64 +409,54 @@ export function TypeMap({ menus }: TypeMapProps) {
           </svg>
 
           <p className="type-map-axis-note">
-            ※横軸・縦軸そのものに固定の意味はありません。「近いタイプ」は、このマップ上で点が近い順に表示します。
+            ※横軸・縦軸そのものに固定の意味はありません。選択タイプに近い3点は、マップ上の距離順で強調します。
           </p>
         </section>
+      </div>
 
-        <aside className="type-map-neighbors" aria-labelledby="type-map-neighbors-heading">
-          <div className="type-map-neighbors-heading">
-            <h3 id="type-map-neighbors-heading">近いタイプ</h3>
-            <span>マップ上の距離順</span>
+      {selectedType && (
+        <section
+          className="type-map-selection-details"
+          aria-labelledby="type-map-selection-heading"
+        >
+          <div
+            className="type-map-selection-heading"
+            style={getTypeColorStyle(selectedType)}
+          >
+            <div>
+              <span>選択タイプ</span>
+              <h3 id="type-map-selection-heading">{selectedType}</h3>
+            </div>
+            <p>
+              レーダーチャートと、その他11タイプまでの距離を表示します。
+            </p>
           </div>
 
-          {selectedType ? (
-            <>
-              <div
-                className="type-map-selected-type"
-                style={getTypeColorStyle(selectedType)}
-              >
-                <span>選択中</span>
-                <strong>{selectedType}</strong>
-              </div>
-              <ol className="type-map-neighbor-list">
-                {nearestTypes.map(({ type, sourceDistance }, index) => (
-                  <li key={type} style={getTypeColorStyle(type)}>
-                    <span className="type-map-neighbor-number">{index + 1}</span>
-                    <button type="button" onClick={() => setSelectedType(type)}>
-                      {type}
-                    </button>
-                    <span className="type-map-distance">
-                      <small>12次元距離</small>
-                      <strong>{formatDistance(sourceDistance)}</strong>
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </>
-          ) : (
-            <div className="type-map-empty">
-              マップ上のタイプを選択してください。
-            </div>
-          )}
+          <div className="type-map-selected-radar">
+            <TypeRadarCharts
+              idPrefix="type-map-selection"
+              series={[{ id: selectedType, type: selectedType }]}
+            />
+          </div>
 
-          <details className="type-map-verification">
-            <summary>マップの再現性</summary>
-            <dl>
-              <div>
-                <dt>stress値</dt>
-                <dd>{TYPE_MAP_STRESS.toFixed(3)}</dd>
-              </div>
-              <div>
-                <dt>最近傍の一致</dt>
-                <dd>{TYPE_MAP_NEAREST_MATCHES} / {playerTypes.length}</dd>
-              </div>
-            </dl>
-            <p>
-              正規化した12次元距離を2次元へ縮約しているため、一部の距離関係にはずれがあります。
-            </p>
-          </details>
-        </aside>
-      </div>
+          <div className="type-map-distance-grid">
+            <TypeDistanceTable
+              id="type-map-screen-distance"
+              title="マップ上の距離"
+              description="MDS後の2次元ユークリッド距離"
+              rows={mapDistanceRows}
+              onSelectType={setSelectedType}
+            />
+            <TypeDistanceTable
+              id="type-map-manhattan-distance"
+              title="マンハッタン距離"
+              description="正規化した12次元のタイプ間距離"
+              rows={manhattanDistanceRows}
+              onSelectType={setSelectedType}
+            />
+          </div>
+        </section>
+      )}
 
       <details className="type-map-training-panel simulation-disclosure">
         <summary>
