@@ -42,6 +42,11 @@ const pointByType = Object.fromEntries(
   TYPE_MAP_POINTS.map((point) => [point.type, point]),
 ) as Record<PlayerType, (typeof TYPE_MAP_POINTS)[number]>
 
+const mapWidth = 247.5
+const mapHeight = 90
+const projectX = (x: number) => x * (mapWidth / 100)
+const projectY = (y: number) => y * (mapHeight / 100)
+
 function formatDistance(distance: number) {
   return distance.toFixed(3)
 }
@@ -164,7 +169,7 @@ export function TypeMap({ menus }: TypeMapProps) {
 
           <svg
             className="type-map-chart"
-            viewBox="0 0 100 100"
+            viewBox={`0 0 ${mapWidth} ${mapHeight}`}
             role="img"
             aria-labelledby="type-map-svg-title type-map-svg-description"
           >
@@ -173,14 +178,20 @@ export function TypeMap({ menus }: TypeMapProps) {
               点が近いほど裏パラの傾向が似ています。縦軸と横軸自体に固定の意味はありません。
             </desc>
 
-            <rect className="type-map-background" x="0" y="0" width="100" height="100" />
+            <rect
+              className="type-map-background"
+              x="0"
+              y="0"
+              width={mapWidth}
+              height={mapHeight}
+            />
             <g className="type-map-grid" aria-hidden="true">
-              <line x1="25" y1="5" x2="25" y2="95" />
-              <line x1="50" y1="5" x2="50" y2="95" />
-              <line x1="75" y1="5" x2="75" y2="95" />
-              <line x1="5" y1="25" x2="95" y2="25" />
-              <line x1="5" y1="50" x2="95" y2="50" />
-              <line x1="5" y1="75" x2="95" y2="75" />
+              <line x1={mapWidth * 0.25} y1="4.5" x2={mapWidth * 0.25} y2="85.5" />
+              <line x1={mapWidth * 0.5} y1="4.5" x2={mapWidth * 0.5} y2="85.5" />
+              <line x1={mapWidth * 0.75} y1="4.5" x2={mapWidth * 0.75} y2="85.5" />
+              <line x1={mapWidth * 0.05} y1="22.5" x2={mapWidth * 0.95} y2="22.5" />
+              <line x1={mapWidth * 0.05} y1="45" x2={mapWidth * 0.95} y2="45" />
+              <line x1={mapWidth * 0.05} y1="67.5" x2={mapWidth * 0.95} y2="67.5" />
             </g>
 
             {selectedType && (
@@ -188,10 +199,10 @@ export function TypeMap({ menus }: TypeMapProps) {
                 {nearestTypes.map(({ type }) => (
                   <line
                     key={type}
-                    x1={pointByType[selectedType].x}
-                    y1={pointByType[selectedType].y}
-                    x2={pointByType[type].x}
-                    y2={pointByType[type].y}
+                    x1={projectX(pointByType[selectedType].x)}
+                    y1={projectY(pointByType[selectedType].y)}
+                    x2={projectX(pointByType[type].x)}
+                    y2={projectY(pointByType[type].y)}
                   />
                 ))}
               </g>
@@ -207,6 +218,8 @@ export function TypeMap({ menus }: TypeMapProps) {
                 )
                 const labelPosition =
                   labelPositions[point.type] ?? defaultLabelPosition
+                const pointX = projectX(point.x)
+                const pointY = projectY(point.y)
 
                 return (
                   <g
@@ -221,22 +234,22 @@ export function TypeMap({ menus }: TypeMapProps) {
                   >
                     <circle
                       className="type-map-point-hit"
-                      cx={point.x}
-                      cy={point.y}
+                      cx={pointX}
+                      cy={pointY}
                       r="4.2"
                     />
                     {isNeighbor && (
                       <circle
                         className="type-map-neighbor-ring"
-                        cx={point.x}
-                        cy={point.y}
+                        cx={pointX}
+                        cy={pointY}
                         r="2.6"
                       />
                     )}
                     <circle
                       className="type-map-point-mark"
-                      cx={point.x}
-                      cy={point.y}
+                      cx={pointX}
+                      cy={pointY}
                       r={isSelected ? 2 : 1.55}
                     >
                       <title>
@@ -249,16 +262,16 @@ export function TypeMap({ menus }: TypeMapProps) {
                     {rank && (
                       <text
                         className="type-map-neighbor-rank"
-                        x={point.x + 2.7}
-                        y={point.y - 2.3}
+                        x={pointX + 2.7}
+                        y={pointY - 2.3}
                       >
                         {rank}
                       </text>
                     )}
                     <text
                       className="type-map-point-label"
-                      x={point.x + labelPosition.dx}
-                      y={point.y + labelPosition.dy}
+                      x={pointX + labelPosition.dx}
+                      y={pointY + labelPosition.dy}
                       textAnchor={labelPosition.anchor}
                     >
                       {point.label}
@@ -271,19 +284,19 @@ export function TypeMap({ menus }: TypeMapProps) {
             {selectedMenu && trainingPoint && (
               <g className="type-map-training-point">
                 <rect
-                  x={trainingPoint.x - 1.5}
-                  y={trainingPoint.y - 1.5}
+                  x={projectX(trainingPoint.x) - 1.5}
+                  y={projectY(trainingPoint.y) - 1.5}
                   width="3"
                   height="3"
-                  transform={`rotate(45 ${trainingPoint.x} ${trainingPoint.y})`}
+                  transform={`rotate(45 ${projectX(trainingPoint.x)} ${projectY(trainingPoint.y)})`}
                 >
                   <title>
                     {selectedMenu.name}・{selectedMenuVector?.tendencyLabel}
                   </title>
                 </rect>
                 <text
-                  x={trainingPoint.x + (trainingPoint.x > 72 ? -2.8 : 2.8)}
-                  y={trainingPoint.y + (trainingPoint.y < 14 ? 3.8 : -2.8)}
+                  x={projectX(trainingPoint.x) + (trainingPoint.x > 72 ? -2.8 : 2.8)}
+                  y={projectY(trainingPoint.y) + (trainingPoint.y < 14 ? 3.8 : -2.8)}
                   textAnchor={trainingPoint.x > 72 ? 'end' : 'start'}
                 >
                   {selectedMenu.name}
