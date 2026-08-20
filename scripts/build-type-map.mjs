@@ -236,12 +236,15 @@ function normalizeForDisplay(coordinates) {
   const maximumY = Math.max(...coordinates.map(({ y }) => y))
   const padding = 8
   const displayRange = 100 - padding * 2
+  const xRange = maximumX - minimumX
+  const yRange = maximumY - minimumY
+  const scale = displayRange / Math.max(xRange, yRange)
+  const xOffset = (100 - xRange * scale) / 2
+  const yOffset = (100 - yRange * scale) / 2
 
   return coordinates.map(({ x, y }) => ({
-    x: padding + ((x - minimumX) / (maximumX - minimumX)) * displayRange,
-    y:
-      padding +
-      (1 - (y - minimumY) / (maximumY - minimumY)) * displayRange,
+    x: xOffset + (x - minimumX) * scale,
+    y: yOffset + (maximumY - y) * scale,
   }))
 }
 

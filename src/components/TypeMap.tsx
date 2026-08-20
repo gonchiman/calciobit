@@ -48,10 +48,12 @@ const pointByType = Object.fromEntries(
   TYPE_MAP_POINTS.map((point) => [point.type, point]),
 ) as Record<PlayerType, (typeof TYPE_MAP_POINTS)[number]>
 
-const mapWidth = 247.5
-const mapHeight = 90
-const projectX = (x: number) => x * (mapWidth / 100)
-const projectY = (y: number) => y * (mapHeight / 100)
+const mapWidth = 120
+const mapHeight = 100
+const mapScale = mapHeight / 100
+const mapOffsetX = (mapWidth - 100 * mapScale) / 2
+const projectX = (x: number) => mapOffsetX + x * mapScale
+const projectY = (y: number) => y * mapScale
 
 type TypeColorStyle = CSSProperties & {
   '--type-color': string
@@ -211,12 +213,12 @@ export function TypeMap({ menus }: TypeMapProps) {
               height={mapHeight}
             />
             <g className="type-map-grid" aria-hidden="true">
-              <line x1={mapWidth * 0.25} y1="4.5" x2={mapWidth * 0.25} y2="85.5" />
-              <line x1={mapWidth * 0.5} y1="4.5" x2={mapWidth * 0.5} y2="85.5" />
-              <line x1={mapWidth * 0.75} y1="4.5" x2={mapWidth * 0.75} y2="85.5" />
-              <line x1={mapWidth * 0.05} y1="22.5" x2={mapWidth * 0.95} y2="22.5" />
-              <line x1={mapWidth * 0.05} y1="45" x2={mapWidth * 0.95} y2="45" />
-              <line x1={mapWidth * 0.05} y1="67.5" x2={mapWidth * 0.95} y2="67.5" />
+              <line x1={projectX(25)} y1={projectY(5)} x2={projectX(25)} y2={projectY(95)} />
+              <line x1={projectX(50)} y1={projectY(5)} x2={projectX(50)} y2={projectY(95)} />
+              <line x1={projectX(75)} y1={projectY(5)} x2={projectX(75)} y2={projectY(95)} />
+              <line x1={projectX(5)} y1={projectY(25)} x2={projectX(95)} y2={projectY(25)} />
+              <line x1={projectX(5)} y1={projectY(50)} x2={projectX(95)} y2={projectY(50)} />
+              <line x1={projectX(5)} y1={projectY(75)} x2={projectX(95)} y2={projectY(75)} />
             </g>
 
             {selectedType && (

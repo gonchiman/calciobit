@@ -1769,6 +1769,11 @@ a {
   background: #fff;
 }
 
+.type-map-card {
+  width: min(100%, 480px);
+  justify-self: start;
+}
+
 .type-map-card-heading,
 .type-map-neighbors-heading {
   display: flex;
@@ -1812,7 +1817,7 @@ a {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 11 / 4;
+  aspect-ratio: 6 / 5;
 }
 
 .type-map-background {
@@ -3983,9 +3988,6 @@ a {
     border-right: 0;
   }
 
-  .type-map-chart {
-    aspect-ratio: 16 / 9;
-  }
 }
 
 @media (max-width: 980px) {
