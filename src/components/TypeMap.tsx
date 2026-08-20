@@ -1,4 +1,9 @@
-import { useMemo, useState, type KeyboardEvent } from 'react'
+import {
+  useMemo,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+} from 'react'
 import {
   TYPE_MAP_DISTANCES,
   TYPE_MAP_NEAREST_MATCHES,
@@ -6,6 +11,7 @@ import {
   TYPE_MAP_STRESS,
 } from '../data/typeMap.generated'
 import { playerTypes, type PlayerType } from '../typeEstimation'
+import { typeColors } from '../typeColors'
 import type { SpecialMenu } from '../types'
 import { calculateTypeVector } from '../typeVector'
 import { useSpecialMenuSearch } from '../useSpecialMenuSearch'
@@ -46,6 +52,14 @@ const mapWidth = 247.5
 const mapHeight = 90
 const projectX = (x: number) => x * (mapWidth / 100)
 const projectY = (y: number) => y * (mapHeight / 100)
+
+type TypeColorStyle = CSSProperties & {
+  '--type-color': string
+}
+
+const getTypeColorStyle = (type: PlayerType): TypeColorStyle => ({
+  '--type-color': typeColors[type],
+})
 
 function formatDistance(distance: number) {
   return distance.toFixed(3)
@@ -199,6 +213,7 @@ export function TypeMap({ menus }: TypeMapProps) {
                 {nearestTypes.map(({ type }) => (
                   <line
                     key={type}
+                    style={getTypeColorStyle(type)}
                     x1={projectX(pointByType[selectedType].x)}
                     y1={projectY(pointByType[selectedType].y)}
                     x2={projectX(pointByType[type].x)}
@@ -225,6 +240,7 @@ export function TypeMap({ menus }: TypeMapProps) {
                   <g
                     className={`type-map-point${isSelected ? ' is-selected' : ''}${isNeighbor ? ' is-neighbor' : ''}${isDimmed ? ' is-dimmed' : ''}`}
                     key={point.type}
+                    style={getTypeColorStyle(point.type)}
                     role="button"
                     tabIndex={0}
                     aria-pressed={isSelected}
@@ -318,13 +334,16 @@ export function TypeMap({ menus }: TypeMapProps) {
 
           {selectedType ? (
             <>
-              <div className="type-map-selected-type">
+              <div
+                className="type-map-selected-type"
+                style={getTypeColorStyle(selectedType)}
+              >
                 <span>選択中</span>
                 <strong>{selectedType}</strong>
               </div>
               <ol className="type-map-neighbor-list">
                 {nearestTypes.map(({ type, distance }, index) => (
-                  <li key={type}>
+                  <li key={type} style={getTypeColorStyle(type)}>
                     <span className="type-map-neighbor-number">{index + 1}</span>
                     <button type="button" onClick={() => setSelectedType(type)}>
                       {type}
