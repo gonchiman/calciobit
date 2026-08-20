@@ -5,17 +5,19 @@ import { SpecialMenuTable } from './components/SpecialMenuTable'
 import { HiddenParameterPrediction } from './components/HiddenParameterPrediction'
 import { TrainingSimulation } from './components/TrainingSimulation'
 import { TypeInformation } from './components/TypeInformation'
+import { TypeMap } from './components/TypeMap'
 import specialMenuData from './data/specialMenus.json'
 import type { SpecialMenu } from './types'
 
 const specialMenus = specialMenuData as SpecialMenu[]
-type Page = 'table' | 'compare' | 'simulate' | 'predict' | 'types'
+type Page = 'table' | 'compare' | 'simulate' | 'predict' | 'types' | 'type-map'
 
 function getPageFromHash(): Page {
   if (window.location.hash === '#compare') return 'compare'
   if (window.location.hash === '#simulate') return 'simulate'
   if (window.location.hash === '#predict') return 'predict'
   if (window.location.hash === '#types') return 'types'
+  if (window.location.hash === '#type-map') return 'type-map'
   return 'table'
 }
 
@@ -70,6 +72,13 @@ function App() {
             >
               タイプ情報
             </a>
+            <a
+              className={page === 'type-map' ? 'active' : undefined}
+              href="#type-map"
+              aria-current={page === 'type-map' ? 'page' : undefined}
+            >
+              タイプマップ
+            </a>
           </nav>
         </div>
       </header>
@@ -80,6 +89,7 @@ function App() {
         {page === 'simulate' && <TrainingSimulation menus={specialMenus} />}
         {page === 'predict' && <HiddenParameterPrediction menus={specialMenus} />}
         {page === 'types' && <TypeInformation />}
+        {page === 'type-map' && <TypeMap menus={specialMenus} />}
 
         <p className="data-note">
           スペシャルメニュー全132件を収録しています。{' '}
