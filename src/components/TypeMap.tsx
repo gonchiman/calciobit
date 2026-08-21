@@ -254,8 +254,11 @@ export function TypeMap({ menus }: TypeMapProps) {
         </div>
       </div>
 
-      <div className="type-map-layout">
-        <section className="type-map-card" aria-labelledby="type-map-chart-heading">
+      <div
+        className={`type-map-overview${selectedType ? ' has-selection' : ''}`}
+      >
+        <div className="type-map-layout">
+          <section className="type-map-card" aria-labelledby="type-map-chart-heading">
           <div className="type-map-card-heading">
             <div>
               <h3 id="type-map-chart-heading">タイプ同士の関係</h3>
@@ -411,7 +414,33 @@ export function TypeMap({ menus }: TypeMapProps) {
           <p className="type-map-axis-note">
             ※横軸・縦軸そのものに固定の意味はありません。選択タイプに近い3点は、マップ上の距離順で強調します。
           </p>
-        </section>
+          </section>
+        </div>
+
+        {selectedType && (
+          <section
+            className="type-map-radar-pane"
+            aria-labelledby="type-map-selection-heading"
+          >
+            <div
+              className="type-map-selection-heading"
+              style={getTypeColorStyle(selectedType)}
+            >
+              <div>
+                <span>選択タイプ</span>
+                <h3 id="type-map-selection-heading">{selectedType}</h3>
+              </div>
+              <p>攻撃系・守備系の裏パラを表示します。</p>
+            </div>
+
+            <div className="type-map-selected-radar">
+              <TypeRadarCharts
+                idPrefix="type-map-selection"
+                series={[{ id: selectedType, type: selectedType }]}
+              />
+            </div>
+          </section>
+        )}
       </div>
 
       {selectedType && (
@@ -419,26 +448,6 @@ export function TypeMap({ menus }: TypeMapProps) {
           className="type-map-selection-details"
           aria-labelledby="type-map-selection-heading"
         >
-          <div
-            className="type-map-selection-heading"
-            style={getTypeColorStyle(selectedType)}
-          >
-            <div>
-              <span>選択タイプ</span>
-              <h3 id="type-map-selection-heading">{selectedType}</h3>
-            </div>
-            <p>
-              レーダーチャートと、その他11タイプまでの距離を表示します。
-            </p>
-          </div>
-
-          <div className="type-map-selected-radar">
-            <TypeRadarCharts
-              idPrefix="type-map-selection"
-              series={[{ id: selectedType, type: selectedType }]}
-            />
-          </div>
-
           <div className="type-map-distance-grid">
             <TypeDistanceTable
               id="type-map-screen-distance"
